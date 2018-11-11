@@ -8,7 +8,7 @@ from copy import deepcopy
 
 class Game:
 
-	def move(self, player, state):
+	def move(self, player, cur_state, state_hist):
 		logger.info("Player making move!!");
 
 	def __init__(self, players):
@@ -56,8 +56,7 @@ class Game:
 			self.cur_state = State(turn, dice_roll, position)
 
 			# Make a move
-			self.move(self.players[turn_player_id], self.cur_state)
+			self.move(self.players[turn_player_id], self.cur_state, self.state_hist)
 
-			state = dict()
-			state['dice_roll'] = dice_roll 
+			# Storing in state_hist
 			self.state_hist.append(deepcopy(self.cur_state))
