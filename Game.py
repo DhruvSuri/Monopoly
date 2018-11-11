@@ -3,13 +3,16 @@ import Constant as constant
 from logger import logger
 from Dice import Dice
 from Board import Board
+from State import State
+from copy import deepcopy
 
 class Game:
 
-	def move(self, player, dice_roll):
+	def move(self, player, state):
 		logger.info("Player making move!!");
 
 	def __init__(self, players):
+		# Board initialization
 		self.board = Board()
 
 		self.players = players
@@ -18,12 +21,9 @@ class Game:
 		self.dices = []
 		for seed in constant.DICE_SEEDS:
 			self.dices.append(Dice(seed))
-		
-		# Initial Position of the players at the start of the game.
-		self.position = [(0,0)]
 
-		# By default first player will play the game
-		self.turn = 0
+		# Current State
+		self.cur_state = State(constant.TURN_INIT, constant.INITIAL_DICE_ROLL, constant.INITIAL_POSITION)
 
 		# State History
 		self.state_hist = []
@@ -33,20 +33,31 @@ class Game:
 
 		for move_count in range(constant.MAX_MOVES):
 			logger.info("Move: " + str(move_count + 1))
-			logger.info("Player %d turn", self.turn+1)
 
-			# Die Roll
-			rolls = [];
+			# Turn calculation
+			turn = self.cur_state.turn + 1
+			turn_player_id = (turn % constant.MAX_PLAYERS)
+			logger.info("Player %d turn", turn_player_id)
+
+			# Dice Roll
+			rolls = []
 			for dice in self.dices:
-				rolls.append(dice.roll());
+				rolls.append(dice.roll())
 			dice_roll = tuple(rolls)
-			logger.info("Dice Roll:" + str(dice_roll))
+			logger.info("Dice Roll: %s", str(dice_roll))
+
+			# Calculating new position
+			position_list = list(self.cur_state.position)
+			position_list[turn_player_id] = (position_list[turn_player_id] + dice_roll[0] + dice_roll[1]) % self.board.total_board_cells
+			position = tuple(position_list)
+			logger.info("New position: %s", str(position))
+			
+			# Forming current state
+			self.cur_state = State(turn, dice_roll, position)
 
 			# Make a move
-			self.move(self.players[self.turn], dice_roll)
+			self.move(self.players[turn_player_id], self.cur_state)
 
 			state = dict()
 			state['dice_roll'] = dice_roll 
-			self.state_hist.append(state);
-
-			self.turn = (self.turn + 1) % constant.MAX_PLAYERS
+			self.state_hist.append(deepcopy(self.cur_state))
