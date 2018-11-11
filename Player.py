@@ -1,6 +1,7 @@
 #! /usr/bin/env python
+import logging
 
 class Player:
 	def __init__(self):
-		print ('Init of Player')
-		
+		logger = logging.getLogger("com.sbu.monopoly.player")
+		logger.info("Player initialized")
