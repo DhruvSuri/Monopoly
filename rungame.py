@@ -1,12 +1,11 @@
 #! /usr/bin/env python
 from Game import Game
+from Player import Player
 
 def main():
-	print ('Hello MonoPlayer!')
-	game = Game()
-	print (len(game.board.board))
-	game2 = Game()
-
+	print ('Playing Monopoly!')
+	game = Game([Player(), Player()])
+	game.run()
 
 if __name__ == '__main__':
 	main()
