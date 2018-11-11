@@ -78,7 +78,7 @@ class Game:
 		cash_holding = curr_state.cash_holdings[player_id]
 		property_json = self.board.board_config[str(position)]
 
-		if(curr_state.property_status[position] == 0 and property_json["rent_hotel"] > 0):
+		if(curr_state.property_status[position] == 0 and property_json["price"] > 0):
 			curr_state.property_status[position] = self.get_property_status(player_id)
 			logger.info("Property %s purchased by Player: %s", str(property_json["name"]), str(player_id))
 
