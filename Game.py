@@ -8,7 +8,8 @@ from copy import deepcopy
 
 class Game:
 
-	def move(self, player, cur_state, state_hist):
+	def runPlayerOnState(self, player, cur_state, state_hist):
+		# curr_state - property_status
 		logger.info("Player making move!!");
 
 	def __init__(self, players):
@@ -23,8 +24,9 @@ class Game:
 			self.dices.append(Dice(seed))
 
 		# Current State
+		property_status_arr = [0 for x in range(constant.PROPERTY_COUNT)]
 		self.cur_state = State(constant.TURN_INIT, constant.INITIAL_DICE_ROLL, \
-		constant.INITIAL_POSITION, constant.INITIAL_CASH_HOLDINGS, constant.BANK_MONEY)
+		constant.INITIAL_POSITION, constant.INITIAL_CASH_HOLDINGS, constant.BANK_MONEY, property_status_arr)
 
 		# State History
 		self.state_hist = []
@@ -59,7 +61,8 @@ class Game:
 			self.cur_state.position = position
 
 			# Make a move
-			self.move(self.players[turn_player_id], self.cur_state, self.state_hist)
+			self.runPlayerOnState(self.players[turn_player_id], self.cur_state, self.state_hist)
+
 
 			# Storing in state_hist
 			self.state_hist.append(deepcopy(self.cur_state))

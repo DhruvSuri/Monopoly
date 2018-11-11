@@ -21,3 +21,6 @@ INITIAL_CASH_HOLDINGS = (1500, 1500)
 
 # Turn
 TURN_INIT = -1
+
+#Property status
+PROPERTY_COUNT = 42
