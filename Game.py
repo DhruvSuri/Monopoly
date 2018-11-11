@@ -7,11 +7,6 @@ from State import State
 from copy import deepcopy
 
 class Game:
-
-	def runPlayerOnState(self, player, cur_state, state_hist):
-		# curr_state - property_status
-		logger.info("Player making move!!");
-
 	def __init__(self, players):
 		# Board initialization
 		self.board = Board()
@@ -59,10 +54,56 @@ class Game:
 			self.cur_state.turn = turn
 			self.cur_state.dice_roll = dice_roll
 			self.cur_state.position = position
+			self.turn_player_id = turn_player_id
 
 			# Make a move
 			self.runPlayerOnState(self.players[turn_player_id], self.cur_state, self.state_hist)
 
-
 			# Storing in state_hist
 			self.state_hist.append(deepcopy(self.cur_state))
+		logger.info("Property Status: %s", str(self.cur_state.property_status))
+
+	def runPlayerOnState(self, player, cur_state, state_hist):
+		# curr_state - property_status
+
+		#based on BSMT decision
+		self.handle_buy(player, cur_state)
+
+		logger.info("Player making move!!");
+
+	def handle_buy(self, player, curr_state):
+		property_status = curr_state.property_status
+		player_id = self.turn_player_id
+		position = curr_state.position[player_id]
+		cash_holding = curr_state.cash_holdings[player_id]
+		property_json = self.board.board_config[str(position)]
+
+		if(curr_state.property_status[position] == 0 and property_json["rent_hotel"] > 0):
+			curr_state.property_status[position] = self.get_property_status(player_id)
+			logger.info("Property %s purchased by Player: %s", str(property_json["name"]), str(player_id))
+
+	def get_property_status(self, turn_player_id):
+		#Define the complete enum for buying property and house
+		if (turn_player_id == 0):
+			return 1
+		else: 
+			return -1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		
+
