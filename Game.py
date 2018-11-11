@@ -23,7 +23,8 @@ class Game:
 			self.dices.append(Dice(seed))
 
 		# Current State
-		self.cur_state = State(constant.TURN_INIT, constant.INITIAL_DICE_ROLL, constant.INITIAL_POSITION)
+		self.cur_state = State(constant.TURN_INIT, constant.INITIAL_DICE_ROLL, \
+		constant.INITIAL_POSITION, constant.INITIAL_CASH_HOLDINGS, constant.BANK_MONEY)
 
 		# State History
 		self.state_hist = []
@@ -52,8 +53,10 @@ class Game:
 			position = tuple(position_list)
 			logger.info("New position: %s", str(position))
 			
-			# Forming current state
-			self.cur_state = State(turn, dice_roll, position)
+			# Forming new current state
+			self.cur_state.turn = turn
+			self.cur_state.dice_roll = dice_roll
+			self.cur_state.position = position
 
 			# Make a move
 			self.move(self.players[turn_player_id], self.cur_state, self.state_hist)
