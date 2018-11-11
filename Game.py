@@ -19,98 +19,104 @@ class Game:
 			self.dices.append(Dice(seed))
 
 		# Current State
-		property_status_arr = [0 for x in range(constant.PROPERTY_COUNT)]
-		self.cur_state = State(constant.TURN_INIT, constant.INITIAL_DICE_ROLL, \
-		constant.INITIAL_POSITION, constant.INITIAL_CASH_HOLDINGS, constant.BANK_MONEY, property_status_arr)
+		propertyStatusArr = [0 for x in range(constant.PROPERTY_COUNT)]
+		self.curState = State(constant.TURN_INIT, constant.INITIAL_DICE_ROLL, \
+		constant.INITIAL_POSITION, constant.INITIAL_CASH_HOLDINGS, constant.BANK_MONEY, \
+		propertyStatusArr)
 
 		# State History
-		self.state_hist = []
+		self.stateHist = []
 
 	def run(self):
 		logger.info("Game started!")
 
-		for move_count in range(constant.MAX_MOVES):
-			logger.info("Move: " + str(move_count + 1))
+		for moveCount in range(constant.MAX_MOVES):
+			logger.info("--------------Move: %d-------------", moveCount + 1)
 
 			# Turn calculation
-			turn = self.cur_state.turn + 1
-			turn_player_id = (turn % constant.MAX_PLAYERS)
-			logger.info("Player %d turn", turn_player_id)
+			turn = self.curState.turn + 1
+			turnPlayerId = (turn % constant.MAX_PLAYERS)
+			logger.info("Player %d turn", turnPlayerId)
 
 			# Dice Roll
 			rolls = []
 			for dice in self.dices:
 				rolls.append(dice.roll())
-			dice_roll = tuple(rolls)
-			logger.info("Dice Roll: %s", str(dice_roll))
+			diceRoll = tuple(rolls)
+			logger.info("Dice Roll: %s", str(diceRoll))
 
 			# Calculating new position
-			position_list = list(self.cur_state.position)
-			position_list[turn_player_id] = (position_list[turn_player_id] + dice_roll[0] + dice_roll[1]) % self.board.total_board_cells
-			position = tuple(position_list)
+			positionList = list(self.curState.position)
+			positionList[turnPlayerId] = (positionList[turnPlayerId] + diceRoll[0] + diceRoll[1]) % self.board.totalBoardCells
+			position = tuple(positionList)
 			logger.info("New position: %s", str(position))
 			
 			# Forming new current state
-			self.cur_state.turn = turn
-			self.cur_state.dice_roll = dice_roll
-			self.cur_state.position = position
-			self.turn_player_id = turn_player_id
+			self.curState.turn = turn
+			self.curState.dice_roll = diceRoll
+			self.curState.position = position
 
 			# Make a move
-			self.runPlayerOnState(self.players[turn_player_id], self.cur_state)
+			self.runPlayerOnState(turnPlayerId, self.curState)
 
 			#broadcast state
-			self.broadcastState(self.players[0], self.players[1], self.cur_state)
+			self.broadcastState(self.players[0], self.players[1], self.curState)
+		
+		logger.info("\n\nGame End")
+		logger.info("Final Property Status: %s", str(self.curState.propertyStatus))
+		
+		for idx, cashHolding in enumerate(self.curState.cashHoldings):
+			logger.info("Player %d cash holdings: %d", idx, cashHolding)
 
-			# Storing in state_hist
-			self.state_hist.append(deepcopy(self.cur_state))
-		logger.info("Property Status: %s", str(self.cur_state.property_status))
+		logger.info("Total Money in the bank: %d", self.curState.bankMoney)
 
-	def runPlayerOnState(self, player, cur_state):
-		# curr_state - property_status
+	def runPlayerOnState(self, playerId, curState):
+		# cur_state - property_status
+		logger.info("Player %d making move!!", playerId);
 
-		#based on BSMT decision
-		self.handle_buy(player, cur_state)
-
-		logger.info("Player making move!!");
+		# Buying Property
+		self.handleBuy(playerId, curState)
 
 	def broadcastState(self, player0, player1, cur_state):
 		player0.state = deepcopy(cur_state)
 		player1.state = deepcopy(cur_state)
+		
+	def handleBuy(self, playerId, curState):
+		position = curState.position[playerId]
+		propertyJson = self.board.boardConfig[str(position)]
 
-	def handle_buy(self, player, curr_state):
-		property_status = curr_state.property_status
-		player_id = self.turn_player_id
-		position = curr_state.position[player_id]
-		cash_holding = curr_state.cash_holdings[player_id]
-		property_json = self.board.board_config[str(position)]
+		if (self.isPropertyEmpty(curState, position) \
+			and self.isPropertyBuyable(propertyJson) \
+			and self.isPlayerEligibleToBuyProperty(curState, playerId, propertyJson) \
+			and self.players[playerId].buyProperty(curState)):
 
-		if(curr_state.property_status[position] == 0 and property_json["price"] > 0):
-			curr_state.property_status[position] = self.get_property_status(player_id)
-			logger.info("Property %s purchased by Player: %s", str(property_json["name"]), str(player_id))
+			# Update Property Status
+			curState.propertyStatus[position] = self.getPropertyStatus(playerId)
+			
+			# Update cash holdings of Player
+			newCashHolding = list(curState.cashHoldings)
+			newCashHolding[playerId] = curState.cashHoldings[playerId] - propertyJson["rent_hotel"]
+			curState.cashHoldings = tuple(newCashHolding)
 
-	def get_property_status(self, turn_player_id):
-		#Define the complete enum for buying property and house
-		if (turn_player_id == 0):
+			# Update Total Money
+			curState.bankMoney = curState.bankMoney + propertyJson["rent_hotel"]
+
+			logger.info("Property %s purchased by Player: %d. Player cash holding: %d", \
+				str(propertyJson["name"]), playerId, curState.cashHoldings[playerId])
+
+	def getPropertyStatus(self, playerId):
+		# Define the complete enum for buying property and house
+		if (playerId == 0):
 			return 1
 		else: 
 			return -1
 
+	def isPropertyEmpty(self, curState, position):
+		return curState.propertyStatus[position] == 0
 
+	def isPropertyBuyable(self, propertyJson):
+		return propertyJson["rent_hotel"] > 0
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		
+	def isPlayerEligibleToBuyProperty(self, curState, playerId, propertyJson):
+		return curState.cashHoldings[playerId] >= propertyJson["rent_hotel"]
 

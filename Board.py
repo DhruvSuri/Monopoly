@@ -6,12 +6,12 @@ class Board:
 		
 	def __init__(self):
 		print('Init of Board')
-		self.board_config = self.initialize_board_config()
+		self.boardConfig = self.initializeBoardConfig()
 
 		# Excluding JAIL index
-		self.total_board_cells = len(self.board_config) - 1
+		self.totalBoardCells = len(self.boardConfig) - 1
 
-	def initialize_board_config(self):
+	def initializeBoardConfig(self):
 		with open('BoardConfig.json', 'r') as f:
 			config = json.load(f)
 		# print(config)

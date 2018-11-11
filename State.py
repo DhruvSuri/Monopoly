@@ -3,13 +3,13 @@ from copy import deepcopy
 
 class State:
 
-    def __init__(self, turn, dice_roll, position, cash_holdings, bank_money, property_status):
+    def __init__(self, turn, diceRoll, position, cashHoldings, bankMoney, propertyStatus):
         self.turn = turn
-        self.dice_roll = dice_roll
+        self.diceRoll = diceRoll
         self.position = position
-        self.cash_holdings = cash_holdings
-        self.bank_money = bank_money
-        self.property_status = property_status
+        self.cashHoldings = cashHoldings
+        self.bankMoney = bankMoney
+        self.propertyStatus = propertyStatus
 
     def __deepcopy__(self, memo):
         # Referred: https://stackoverflow.com/questions/4794244/how-can-i-create-a-copy-of-an-object-in-python
@@ -19,10 +19,10 @@ class State:
         if _copy is None:
             _copy = type(self)(
                 deepcopy(self.turn, memo),
-                deepcopy(self.dice_roll, memo),
+                deepcopy(self.diceRoll, memo),
                 deepcopy(self.position, memo),
-                deepcopy(self.cash_holdings, memo),
-                deepcopy(self.bank_money, memo),
-                deepcopy(self.property_status, memo))
+                deepcopy(self.cashHoldings, memo),
+                deepcopy(self.bankMoney, memo),
+                deepcopy(self.propertyStatus, memo))
             memo[id_self] = _copy 
         return _copy
