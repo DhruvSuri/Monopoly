@@ -57,19 +57,26 @@ class Game:
 			self.turn_player_id = turn_player_id
 
 			# Make a move
-			self.runPlayerOnState(self.players[turn_player_id], self.cur_state, self.state_hist)
+			self.runPlayerOnState(self.players[turn_player_id], self.cur_state)
+
+			#broadcast state
+			self.broadcastState(self.players[0], self.players[1], self.cur_state)
 
 			# Storing in state_hist
 			self.state_hist.append(deepcopy(self.cur_state))
 		logger.info("Property Status: %s", str(self.cur_state.property_status))
 
-	def runPlayerOnState(self, player, cur_state, state_hist):
+	def runPlayerOnState(self, player, cur_state):
 		# curr_state - property_status
 
 		#based on BSMT decision
 		self.handle_buy(player, cur_state)
 
 		logger.info("Player making move!!");
+
+	def broadcastState(self, player0, player1, cur_state):
+		player0.state = deepcopy(cur_state)
+		player1.state = deepcopy(cur_state)
 
 	def handle_buy(self, player, curr_state):
 		property_status = curr_state.property_status

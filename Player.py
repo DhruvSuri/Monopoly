@@ -5,6 +5,7 @@ class Player:
 	def __init__(self):
 		logger = logging.getLogger("com.sbu.monopoly.player")
 		logger.info("Player initialized")
+		self.state = None
 
 	def getBMSTDecision(self, state):
 		return action	
