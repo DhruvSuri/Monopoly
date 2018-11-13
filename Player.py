@@ -9,10 +9,10 @@ class Player:
 		logger.info("Player initialized")
 
 	def getBMSTDecision(self, state):
-		return action	
+		return None
 
 	def respondTrade(self, state):
-		return action
+		return None
 	
 	def buyProperty(self, state):
 		return True

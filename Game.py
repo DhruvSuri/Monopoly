@@ -25,14 +25,14 @@ class Game:
 			self.dices.append(Dice(seed))
 
 		# Current State
-		propertyStatusArr = [constant.INITIAL_PROPERTY_STATUS for x in range(constant.PROPERTY_COUNT)]
+		propertyStatus = [constant.INITIAL_PROPERTY_STATUS for x in range(constant.PROPERTY_COUNT)]
 		
 		self.curState = State(constant.TURN_INIT, \
 							constant.INITIAL_DICE_ROLL, \
 							constant.INITIAL_POSITION, \
 							constant.INITIAL_CASH_HOLDINGS, \
 							constant.BANK_MONEY, \
-							propertyStatusArr)
+							propertyStatus)
 
 		# State History
 		self.stateHist = []
@@ -66,10 +66,13 @@ class Game:
 			self.curState.diceRoll = diceRolls
 			self.curState.position = position
 
+			# Execute BSMT for all players
+			self.executeBSMT(self.players, self.curState)
+			
 			# Make a move
 			self.runPlayerOnState(turnPlayerId, self.curState)
 
-			#broadcast state
+			# Broadcast state to all the players
 			self.broadcastState(self.players, self.curState)
 		
 		logger.info("\n\nGame End")
@@ -80,34 +83,52 @@ class Game:
 
 		logger.info("Total Money in the bank: %d", self.curState.bankMoney)
 
-	# This needs to be change to match what is described in the API doc.
-	# Needs to return an action which player is going to
 	def runPlayerOnState(self, playerId, curState):
-		# cur_state - property_status
 		logger.info("Player %d making move!!", playerId)
 
-		# ToDo: Model buy properly. Figure out build_cost and price. Current logic is wrong
-		# ToDo: Model rent
-		# ToDo: Model getting out of JAIL
-		# ToDo: Model Chance card
-		# ToDo: Model building house, hotels
-		# ToDo: Model BSMT
+		position = curState.position[playerId]
+		propertyJson = self.board.boardConfig[str(position)]
 
-		# Buying Property
-		self.handleBuy(playerId, curState)
+		if self.isPropertyBuyable(propertyJson):
+			if self.isPropertyEmpty(curState, position):
+				self.handleBuy(playerId, curState)
+			elif not playerId == self.getPropertyOwner(curState, position):
+				self.handleRent(playerId, curState)
+			else:
+				# ToDo: Model building house, hotels
+				pass
+
+		# ToDo: Model getting out of JAIL
+		# ToDo: Model Chance card		
 
 	# Using players as an argument to extend it to multiple players as well.
 	def broadcastState(self, players, curState):
 		for player in players:
 			player.receiveState(deepcopy(curState))
+
+	def handleRent(self, playerId, curState):
+		position = curState.position[playerId]
+		propertyJson = self.board.boardConfig[str(position)]
+
+		ownerId = self.getPropertyOwner(curState, position)
+		
+		# ToDo: Model Rent based on house, hotels etc.
+		rent = propertyJson["rent"]
+		
+		newCashHolding = list(curState.cashHoldings)
+		newCashHolding[ownerId] = curState.cashHoldings[ownerId] + rent
+
+		# ToDo: Handle what to do in case of not enough money
+		newCashHolding[playerId] = curState.cashHoldings[playerId] - rent
+
+		logger.info("Rent paid by Player: %d is %d", playerId, rent)
+		curState.cashHoldings = tuple(newCashHolding)
 		
 	def handleBuy(self, playerId, curState):
 		position = curState.position[playerId]
 		propertyJson = self.board.boardConfig[str(position)]
 
-		if (self.isPropertyEmpty(curState, position) \
-			and self.isPropertyBuyable(propertyJson) \
-			and self.isPlayerEligibleToBuyProperty(curState, playerId, propertyJson) \
+		if (curState.cashHoldings[playerId] >= propertyJson["price"] \
 			and self.players[playerId].buyProperty(curState)):
 
 			# Update Property Status
@@ -115,11 +136,11 @@ class Game:
 			
 			# Update cash holdings of Player
 			newCashHolding = list(curState.cashHoldings)
-			newCashHolding[playerId] = curState.cashHoldings[playerId] - propertyJson["rent_hotel"]
+			newCashHolding[playerId] = curState.cashHoldings[playerId] - propertyJson["price"]
 			curState.cashHoldings = tuple(newCashHolding)
 
 			# Update Total Money
-			curState.bankMoney = curState.bankMoney + propertyJson["rent_hotel"]
+			curState.bankMoney = curState.bankMoney + propertyJson["price"]
 
 			logger.info("Property %s purchased by Player: %d. Player cash holding: %d", \
 				str(propertyJson["name"]), playerId, curState.cashHoldings[playerId])
@@ -140,10 +161,13 @@ class Game:
 		return curState.propertyStatus[position] == 0
 
 	def isPropertyBuyable(self, propertyJson):
-		return propertyJson["rent_hotel"] > 0
+		return propertyJson["price"] > 0
 
-	def isPlayerEligibleToBuyProperty(self, curState, playerId, propertyJson):
-		return curState.cashHoldings[playerId] >= propertyJson["rent_hotel"]
+	def getPropertyOwner(self, curState, propertyPosition):
+		if curState.propertyStatus[propertyPosition] > 0:
+			return 0
+		else:
+			return 1
 
 	def initializeCards(self, fileName):
 		with open(fileName, 'r') as f:
@@ -182,3 +206,8 @@ class Game:
 			totalMoves = 0
 
 		return [isJailed, rollsHist, totalMoves]
+
+	def executeBSMT(self, players, curState):
+		for player in self.players:
+			action = player.getBMSTDecision(curState)
+			# ToDo: Execute the action
