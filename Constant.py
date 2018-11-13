@@ -26,3 +26,9 @@ TURN_INIT = -1
 # Property status
 INITIAL_PROPERTY_STATUS = 0
 PROPERTY_COUNT = 42
+
+#Chance and Community Card
+CHANCE_CARD_FILE_NAME = 'ChanceCards.json'
+COMMUNITY_CARDS_FILE_NAME = 'CommunityChestCards.json'
+MAX_CHANCE_CARD = 16
+MAX_COMMUNITY_CARD = 16

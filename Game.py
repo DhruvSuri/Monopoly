@@ -6,6 +6,7 @@ from Board import Board
 from State import State
 from copy import deepcopy
 import numpy as np
+import json
 
 class Game:
 	def __init__(self, players):
@@ -13,6 +14,10 @@ class Game:
 		self.board = Board()
 
 		self.players = players
+		
+		#Initialize Cards
+		self.chanceCards = self.initializeCards(constant.CHANCE_CARD_FILE_NAME)
+		self.communityChestCards = self.initializeCards(constant.COMMUNITY_CARDS_FILE_NAME)
 
 		# Dice initialization
 		self.dices = []
@@ -139,6 +144,16 @@ class Game:
 
 	def isPlayerEligibleToBuyProperty(self, curState, playerId, propertyJson):
 		return curState.cashHoldings[playerId] >= propertyJson["rent_hotel"]
+
+	def initializeCards(self, fileName):
+		with open(fileName, 'r') as f:
+			cards = json.load(f)
+		np.random.shuffle(cards)
+		return cards
+
+	def drawRandomCard(self, cards):
+		# np.random.shuffle(cards)
+		return cards[0]
 
 	def diceRolls(self):
 		# Returns [isJailed, rolls, totalMoves]
