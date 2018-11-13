@@ -38,22 +38,22 @@ class Game:
 			turnPlayerId = (turn % constant.MAX_PLAYERS)
 			logger.info("Player %d turn", turnPlayerId)
 
-			# Dice Roll
-			rolls = []
-			for dice in self.dices:
-				rolls.append(dice.roll())
-			diceRoll = tuple(rolls)
-			logger.info("Dice Roll: %s", str(diceRoll))
+			isJailed, diceRollTupple, totalMoves = self.diceRolls()
 
-			# Calculating new position
-			positionList = list(self.curState.position)
-			positionList[turnPlayerId] = (positionList[turnPlayerId] + diceRoll[0] + diceRoll[1]) % self.board.totalBoardCells
-			position = tuple(positionList)
-			logger.info("New position: %s", str(position))
+			if(isJailed):
+				logger.info("Player: %s landed in jail", str(turnPlayerId))
+				self.landInJail(turnPlayerId, self.curState)
+			else:
+				# Calculating new position
+				positionList = list(self.curState.position)
+				positionList[turnPlayerId] = (positionList[turnPlayerId] + totalMoves) % self.board.totalBoardCells
+				position = tuple(positionList)
+				logger.info("Moving total %s moves. New position: %s", str(totalMoves), str(position))
+
 			
 			# Forming new current state
 			self.curState.turn = turn
-			self.curState.dice_roll = diceRoll
+			self.curState.dice_roll = diceRollTupple
 			self.curState.position = position
 
 			# Make a move
@@ -104,6 +104,11 @@ class Game:
 			logger.info("Property %s purchased by Player: %d. Player cash holding: %d", \
 				str(propertyJson["name"]), playerId, curState.cashHoldings[playerId])
 
+	def landInJail(self, playerId, currState):
+		positionList = list(currState.position)
+		positionList[playerId] = -1
+		currState.position = tuple(positionList)
+
 	def getPropertyStatus(self, playerId):
 		# Define the complete enum for buying property and house
 		if (playerId == 0):
@@ -119,4 +124,36 @@ class Game:
 
 	def isPlayerEligibleToBuyProperty(self, curState, playerId, propertyJson):
 		return curState.cashHoldings[playerId] >= propertyJson["rent_hotel"]
+
+	def diceRolls(self):
+		#returns [is_jailed, dice_roll_tupple, total__move_count]
+		rolls = []
+		sum = 0
+
+		#First roll
+		for dice in self.dices:
+			rolls.append(dice.roll())
+		sum = rolls[0] + rolls[1]
+		if(sum != 12):
+			return [False, tuple(rolls), sum]
+
+		#sencond roll
+		logger.info("Die Roll = (6, 6). Rolling again")
+		rolls = []
+		for dice in self.dices:
+			rolls.append(dice.roll())
+		sum = sum + rolls[0] + rolls[1]
+		if(sum != 24):
+			return [False, tuple(rolls), sum]
+
+		#third roll
+		logger.info("Die Roll = (6, 6). Rolling again")
+		rolls = []
+		for dice in self.dices:
+			rolls.append(dice.roll())
+		sum = sum + rolls[0] + rolls[1]
+		if(sum == 36):
+			return [True, tuple(rolls), sum]
+		else:
+			return [False, tuple(rolls), sum]
 
