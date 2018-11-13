@@ -5,6 +5,7 @@ from Dice import Dice
 from Board import Board
 from State import State
 from copy import deepcopy
+import numpy as np
 
 class Game:
 	def __init__(self, players):
@@ -19,10 +20,14 @@ class Game:
 			self.dices.append(Dice(seed))
 
 		# Current State
-		propertyStatusArr = [0 for x in range(constant.PROPERTY_COUNT)]
-		self.curState = State(constant.TURN_INIT, constant.INITIAL_DICE_ROLL, \
-		constant.INITIAL_POSITION, constant.INITIAL_CASH_HOLDINGS, constant.BANK_MONEY, \
-		propertyStatusArr)
+		propertyStatusArr = [constant.INITIAL_PROPERTY_STATUS for x in range(constant.PROPERTY_COUNT)]
+		
+		self.curState = State(constant.TURN_INIT, \
+							constant.INITIAL_DICE_ROLL, \
+							constant.INITIAL_POSITION, \
+							constant.INITIAL_CASH_HOLDINGS, \
+							constant.BANK_MONEY, \
+							propertyStatusArr)
 
 		# State History
 		self.stateHist = []
@@ -38,10 +43,10 @@ class Game:
 			turnPlayerId = (turn % constant.MAX_PLAYERS)
 			logger.info("Player %d turn", turnPlayerId)
 
-			isJailed, diceRollTupple, totalMoves = self.diceRolls()
+			isJailed, diceRolls, totalMoves = self.diceRolls()
 
-			if(isJailed):
-				logger.info("Player: %s landed in jail", str(turnPlayerId))
+			if isJailed:
+				logger.info("Player: %d landed in jail", turnPlayerId)
 				self.landInJail(turnPlayerId, self.curState)
 			else:
 				# Calculating new position
@@ -53,14 +58,14 @@ class Game:
 			
 			# Forming new current state
 			self.curState.turn = turn
-			self.curState.dice_roll = diceRollTupple
+			self.curState.diceRoll = diceRolls
 			self.curState.position = position
 
 			# Make a move
 			self.runPlayerOnState(turnPlayerId, self.curState)
 
 			#broadcast state
-			self.broadcastState(self.players[0], self.players[1], self.curState)
+			self.broadcastState(self.players, self.curState)
 		
 		logger.info("\n\nGame End")
 		logger.info("Final Property Status: %s", str(self.curState.propertyStatus))
@@ -70,16 +75,26 @@ class Game:
 
 		logger.info("Total Money in the bank: %d", self.curState.bankMoney)
 
+	# This needs to be change to match what is described in the API doc.
+	# Needs to return an action which player is going to
 	def runPlayerOnState(self, playerId, curState):
 		# cur_state - property_status
-		logger.info("Player %d making move!!", playerId);
+		logger.info("Player %d making move!!", playerId)
+
+		# ToDo: Model buy properly. Figure out build_cost and price. Current logic is wrong
+		# ToDo: Model rent
+		# ToDo: Model getting out of JAIL
+		# ToDo: Model Chance card
+		# ToDo: Model building house, hotels
+		# ToDo: Model BSMT
 
 		# Buying Property
 		self.handleBuy(playerId, curState)
 
-	def broadcastState(self, player0, player1, cur_state):
-		player0.state = deepcopy(cur_state)
-		player1.state = deepcopy(cur_state)
+	# Using players as an argument to extend it to multiple players as well.
+	def broadcastState(self, players, curState):
+		for player in players:
+			player.receiveState(deepcopy(curState))
 		
 	def handleBuy(self, playerId, curState):
 		position = curState.position[playerId]
@@ -126,34 +141,29 @@ class Game:
 		return curState.cashHoldings[playerId] >= propertyJson["rent_hotel"]
 
 	def diceRolls(self):
-		#returns [is_jailed, dice_roll_tupple, total__move_count]
-		rolls = []
-		sum = 0
+		# Returns [isJailed, rolls, totalMoves]
+		# totalMoves is 0 when isJailed is True
+		
+		isJailed = True
+		totalMoves = 0
+		rollsHist = []
+		for _ in range(constant.MAX_ROLLS_FOR_JAIL):
+			
+			rolls = []
+			for dice in self.dices:
+				rolls.append(dice.roll())
+			logger.info("Dice Roll: %s", str(rolls))
+			
+			rollsHist.append(tuple(rolls))
+			
+			totalMoves = totalMoves + np.sum(rolls)
+			
+			uniqueRolls = np.unique(rolls)
+			if len(uniqueRolls) != 1 or uniqueRolls[0] != constant.DICE_ROLL_MAX_VALUE:
+				isJailed = False
+				break
+		
+		if isJailed:
+			totalMoves = 0
 
-		#First roll
-		for dice in self.dices:
-			rolls.append(dice.roll())
-		sum = rolls[0] + rolls[1]
-		if(sum != 12):
-			return [False, tuple(rolls), sum]
-
-		#sencond roll
-		logger.info("Die Roll = (6, 6). Rolling again")
-		rolls = []
-		for dice in self.dices:
-			rolls.append(dice.roll())
-		sum = sum + rolls[0] + rolls[1]
-		if(sum != 24):
-			return [False, tuple(rolls), sum]
-
-		#third roll
-		logger.info("Die Roll = (6, 6). Rolling again")
-		rolls = []
-		for dice in self.dices:
-			rolls.append(dice.roll())
-		sum = sum + rolls[0] + rolls[1]
-		if(sum == 36):
-			return [True, tuple(rolls), sum]
-		else:
-			return [False, tuple(rolls), sum]
-
+		return [isJailed, rollsHist, totalMoves]

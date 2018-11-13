@@ -8,4 +8,4 @@ class Dice:
         self.rnd = np.random.RandomState(state)
 
     def roll(self):
-        return self.rnd.randint(constant.DICE_ROLL_MIN, constant.DICE_ROLL_MAX)
+        return self.rnd.randint(constant.DICE_ROLL_MIN_VALUE, constant.DICE_ROLL_MAX_VALUE + 1)

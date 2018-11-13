@@ -2,10 +2,11 @@
 import logging
 
 class Player:
-	def __init__(self):
+	def __init__(self, id):
 		logger = logging.getLogger("com.sbu.monopoly.player")
-		logger.info("Player initialized")
+		self.id = id
 		self.state = None
+		logger.info("Player initialized")
 
 	def getBMSTDecision(self, state):
 		return action	
@@ -19,10 +20,15 @@ class Player:
 	def auctionProperty(self, state):
 		return False
 	
+	def receiveState(self, state):
+		self.state = state
+		
 	def respondMortgage(self, state):
 		return True
 
 	def jailDecision(self, state):
+		# ToDo: Different actions needs to be modelled R, P or C
+		# Currently in greedy approach modelling as P
 		return ("P")
 	
 	
