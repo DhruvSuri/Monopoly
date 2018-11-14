@@ -33,3 +33,26 @@ class State:
 
     def getPlayerPosition(self, playerId):
         return self.position[playerId]
+
+    def isPropertyEmpty(self, position):
+        return self.propertyStatus[position] == constant.INITIAL_PROPERTY_STATUS
+
+    def getPropertyOwner(self, position):
+        # Player 1
+        if self.propertyStatus[position] > 0:
+            return 0
+        # Player 2
+        else:
+            return 1
+
+    def updatePropertyStatus(self, position, playerId):
+        sign = 1
+        if playerId == 1:
+            sign = -1
+        
+        self.propertyStatus[position] = sign
+
+    def updateCashHolding(self, playerId, cashToAdd):
+        newCashHolding = list(self.cashHoldings)
+        newCashHolding[playerId] = self.cashHoldings[playerId] + cashToAdd
+        self.cashHoldings = tuple(newCashHolding)

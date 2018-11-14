@@ -55,6 +55,7 @@ class Game:
 		self.boardCellHandlers = dict()
 		self.boardCellHandlers["GoToJail"] = self.handleCellGoToJail
 		self.boardCellHandlers["Tax"] = self.handleCellPayTax
+		self.boardCellHandlers["Street"] = self.handleCellStreet
 
 	def run(self):
 		logger.info("Game started!")
@@ -81,95 +82,16 @@ class Game:
 			self.handleBoardCell(self.curState, self.players, turnPlayerId)
 			logger.info("New cash holding: %s", str(self.curState.cashHoldings))
 
-			# Make a move
-			self.runPlayerOnState(turnPlayerId, self.curState)
-
 			# Broadcast state to all the players
 			self.broadcastState(self.curState, self.players)
 		
 		logger.info("\nGame End\n")
-		self.displayState(self.curState, self.players)
-
-	def runPlayerOnState(self, playerId, curState):
-		position = curState.position[playerId]
-
-		if self.board.isPropertyBuyable(str(position)):
-			if self.isPropertyEmpty(curState, position):
-				self.handleBuy(playerId, curState)
-			elif not playerId == self.getPropertyOwner(curState, position):
-				self.handleRent(playerId, curState)
-			else:
-				# ToDo: Model building house, hotels
-				pass
-
-		# ToDo: Model getting out of JAIL
-		# ToDo: Model Chance card		
+		self.displayState(self.curState, self.players)	
 
 	# Using players as an argument to extend it to multiple players as well.
 	def broadcastState(self, curState, players):
 		for player in players:
 			player.receiveState(deepcopy(curState))
-
-	def handleRent(self, playerId, curState):
-		position = curState.position[playerId]
-		propertyJson = self.board.boardConfig[str(position)]
-
-		ownerId = self.getPropertyOwner(curState, position)
-		
-		# ToDo: Model Rent based on house, hotels etc.
-		rent = propertyJson["rent"]
-		
-		newCashHolding = list(curState.cashHoldings)
-		newCashHolding[ownerId] = curState.cashHoldings[ownerId] + rent
-
-		# ToDo: Handle what to do in case of not enough money
-		newCashHolding[playerId] = curState.cashHoldings[playerId] - rent
-
-		logger.info("Rent paid by Player: %d is %d", playerId, rent)
-		curState.cashHoldings = tuple(newCashHolding)
-		
-	def handleBuy(self, playerId, curState):
-		position = curState.position[playerId]
-		propertyJson = self.board.boardConfig[str(position)]
-
-		if (curState.cashHoldings[playerId] >= propertyJson["price"] \
-			and self.players[playerId].buyProperty(curState)):
-
-			# Update Property Status
-			curState.propertyStatus[position] = self.getPropertyStatus(playerId)
-			
-			# Update cash holdings of Player
-			newCashHolding = list(curState.cashHoldings)
-			newCashHolding[playerId] = curState.cashHoldings[playerId] - propertyJson["price"]
-			curState.cashHoldings = tuple(newCashHolding)
-
-			# Update Total Money
-			curState.bankMoney = curState.bankMoney + propertyJson["price"]
-
-			logger.info("Property %s purchased by Player: %d. Player cash holding: %d", \
-				str(propertyJson["name"]), playerId, curState.cashHoldings[playerId])
-
-	def landInJail(self, playerId, curState):
-		if curState.position[playerId] == constant.IN_JAIL_INDEX:
-			logger.info("Player: %d staying in jail", playerId)
-		else:
-			logger.info("Player: %d landed in jail", playerId)
-			positionList = list(curState.position)
-			positionList[playerId] = constant.IN_JAIL_INDEX
-			curState.position = tuple(positionList)
-
-	def getPropertyStatus(self, playerId):
-		# Define the complete enum for buying property and house
-		if (playerId == 0):
-			return 1
-		else: 
-			return -1
-
-	def getPropertyOwner(self, curState, propertyPosition):
-		if curState.propertyStatus[propertyPosition] > 0:
-			return 0
-		else:
-			return 1
 
 	def initializeCards(self, fileName):
 		with open(fileName, 'r') as f:
@@ -299,11 +221,6 @@ class Game:
 		 
 		curState.position = tuple(positionList)
 
-	def updateCashHolding(self, curState, playerId, cashToAdd):
-		newCashHolding = list(curState.cashHoldings)
-		newCashHolding[playerId] = curState.cashHoldings[playerId] + cashToAdd
-		curState.cashHoldings = tuple(newCashHolding)
-
 	def displayState(self, curState, players):		
 		for idx, cashHolding in enumerate(curState.cashHoldings):
 			logger.info("Player %d cash holdings: %d", players[idx].id, cashHolding)
@@ -311,15 +228,12 @@ class Game:
 
 		logger.info("Final Property Status:")
 		for idx in range(1, len(curState.propertyStatus) - 2):
-			propertyName = self.board.getPropertyName(str(idx))
+			propertyName = self.board.getPropertyName(idx)
 			logger.info("Property %s: %d", propertyName, curState.propertyStatus[idx])
-
-	def isPropertyEmpty(self, curState, position):
-		return curState.propertyStatus[position] == 0
 
 	def handleBoardCell(self, curState, players, turnPlayerId):
 		playerPosition = curState.position[turnPlayerId]
-		boardCellClass = self.board.getPropertyClass(str(playerPosition))
+		boardCellClass = self.board.getPropertyClass(playerPosition)
 		if boardCellClass in self.boardCellHandlers:
 			handler = self.boardCellHandlers[boardCellClass]
 			handler(curState, players, turnPlayerId)
@@ -338,5 +252,36 @@ class Game:
 		logger.debug("handleCellPayTax called")
 		
 		playerPosition = curState.position[turnPlayerId]
-		tax = self.board.getPropertyTax(str(playerPosition))
-		self.updateCashHolding(curState, turnPlayerId, -1 * tax)
+		tax = self.board.getPropertyTax(playerPosition)
+		curState.updateCashHolding(turnPlayerId, -1 * tax)
+	
+	def handleCellStreet(self, curState, players, turnPlayerId):
+		logger.debug("handleCellStreet called")
+
+		position = curState.position[turnPlayerId]
+		owner = self.curState.getPropertyOwner(position)
+
+		if curState.isPropertyEmpty(position):
+			# Buy Property
+			self.buyProperty(curState, turnPlayerId, position)
+		elif not (turnPlayerId == owner):
+			# Pay Rent
+			rent = self.board.getPropertyRent(position)
+
+			curState.updateCashHolding(owner, rent)
+			curState.updateCashHolding(turnPlayerId, -1 * rent)
+
+			logger.info("Player %d paid %d rent", players[turnPlayerId].id, rent)
+		
+	def buyProperty(self, curState, playerId, propertyPosition):
+		price = self.board.getPropertyPrice(propertyPosition)
+
+		if (curState.cashHoldings[playerId] >= price \
+			and self.players[playerId].buyProperty(curState)):
+
+			curState.updatePropertyStatus(propertyPosition, playerId)
+			curState.updateCashHolding(playerId, -1 * price)
+			curState.bankMoney = curState.bankMoney + price
+
+			logger.info("Property %s purchased by Player: %d. Player cash holding: %d", \
+				self.board.getPropertyName(propertyPosition), playerId, curState.cashHoldings[playerId])
