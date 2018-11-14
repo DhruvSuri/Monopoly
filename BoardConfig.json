@@ -11,8 +11,7 @@
 "rent_house_2":0,
 "rent_house_3":0,
 "rent_house_4":0,
-"rent_hotel":0,
-"tax":0
+"rent_hotel":0
 },
 "0":{
 "class":"Idle",
@@ -26,8 +25,7 @@
 "rent_house_2":0,
 "rent_house_3":0,
 "rent_house_4":0,
-"rent_hotel":0,
-"tax":0
+"rent_hotel":0
 },
 "1":{
 "class":"Street",
@@ -42,7 +40,6 @@
 "rent_house_3":90,
 "rent_house_4":160,
 "rent_hotel":250,
-"tax":0,
 "monopoly_group_elements":[3]
 },
 "2":{
@@ -57,8 +54,7 @@
 "rent_house_2":0,
 "rent_house_3":0,
 "rent_house_4":0,
-"rent_hotel":0,
-"tax":0
+"rent_hotel":0
 },
 "3":{
 "class":"Street",
@@ -73,7 +69,6 @@
 "rent_house_3":180,
 "rent_house_4":320,
 "rent_hotel":450,
-"tax":0,
 "monopoly_group_elements":[1]
 },
 "4":{
@@ -104,7 +99,6 @@
 "rent_house_3":0,
 "rent_house_4":0,
 "rent_hotel":0,
-"tax":0,
 "monopoly_group_elements":[15, 25, 35]
 },
 "6":{
@@ -120,7 +114,6 @@
 "rent_house_3":270,
 "rent_house_4":400,
 "rent_hotel":550,
-"tax":0,
 "monopoly_group_elements":[8, 9]
 },
 "7":{
@@ -135,8 +128,7 @@
 "rent_house_2":0,
 "rent_house_3":0,
 "rent_house_4":0,
-"rent_hotel":0,
-"tax":0
+"rent_hotel":0
 },
 "8":{
 "class":"Street",
@@ -151,7 +143,6 @@
 "rent_house_3":270,
 "rent_house_4":400,
 "rent_hotel":550,
-"tax":0,
 "monopoly_group_elements":[6, 9]
 },
 "9":{
@@ -167,7 +158,6 @@
 "rent_house_3":300,
 "rent_house_4":450,
 "rent_hotel":600,
-"tax":0,
 "monopoly_group_elements":[6, 8]
 },
 "10":{
@@ -182,8 +172,7 @@
 "rent_house_2":0,
 "rent_house_3":0,
 "rent_house_4":0,
-"rent_hotel":0,
-"tax":0
+"rent_hotel":0
 },
 "11":{
 "class":"Street",
@@ -198,7 +187,6 @@
 "rent_house_3":450,
 "rent_house_4":625,
 "rent_hotel":750,
-"tax":0,
 "monopoly_group_elements":[13, 14]
 },
 "12":{
@@ -214,7 +202,6 @@
 "rent_house_3":0,
 "rent_house_4":0,
 "rent_hotel":0,
-"tax":0,
 "monopoly_group_elements":[28]
 },
 "13":{
@@ -230,7 +217,6 @@
 "rent_house_3":450,
 "rent_house_4":625,
 "rent_hotel":750,
-"tax":0,
 "monopoly_group_elements":[11, 14]
 },
 "14":{
@@ -246,7 +232,6 @@
 "rent_house_3":500,
 "rent_house_4":700,
 "rent_hotel":900,
-"tax":0,
 "monopoly_group_elements":[11, 13]
 },
 "15":{
@@ -262,7 +247,6 @@
 "rent_house_3":0,
 "rent_house_4":0,
 "rent_hotel":0,
-"tax":0,
 "monopoly_group_elements":[5, 25, 35]
 },
 "16":{
@@ -278,7 +262,6 @@
 "rent_house_3":550,
 "rent_house_4":750,
 "rent_hotel":950,
-"tax":0,
 "monopoly_group_elements":[18, 19]
 },
 "17":{
@@ -293,8 +276,7 @@
 "rent_house_2":0,
 "rent_house_3":0,
 "rent_house_4":0,
-"rent_hotel":0,
-"tax":0
+"rent_hotel":0
 },
 "18":{
 "class":"Street",
@@ -309,7 +291,6 @@
 "rent_house_3":550,
 "rent_house_4":750,
 "rent_hotel":950,
-"tax":0,
 "monopoly_group_elements":[16, 19]
 },
 "19":{
@@ -325,7 +306,6 @@
 "rent_house_3":600,
 "rent_house_4":800,
 "rent_hotel":1000,
-"tax":0,
 "monopoly_group_elements":[16, 18]
 },
 "20":{
@@ -340,8 +320,7 @@
 "rent_house_2":0,
 "rent_house_3":0,
 "rent_house_4":0,
-"rent_hotel":0,
-"tax":0
+"rent_hotel":0
 },
 "21":{
 "class":"Street",
@@ -356,7 +335,6 @@
 "rent_house_3":700,
 "rent_house_4":875,
 "rent_hotel":1050,
-"tax":0,
 "monopoly_group_elements":[23, 24]
 },
 "22":{
@@ -371,8 +349,7 @@
 "rent_house_2":0,
 "rent_house_3":0,
 "rent_house_4":0,
-"rent_hotel":0,
-"tax":0
+"rent_hotel":0
 },
 "23":{
 "class":"Street",
@@ -387,7 +364,6 @@
 "rent_house_3":700,
 "rent_house_4":875,
 "rent_hotel":1050,
-"tax":0,
 "monopoly_group_elements":[21, 24]
 },
 "24":{
@@ -403,7 +379,6 @@
 "rent_house_3":750,
 "rent_house_4":925,
 "rent_hotel":1100,
-"tax":0,
 "monopoly_group_elements":[21, 23]
 },
 "25":{
@@ -419,7 +394,6 @@
 "rent_house_3":0,
 "rent_house_4":0,
 "rent_hotel":0,
-"tax":0,
 "monopoly_group_elements":[5, 15, 35]
 },
 "26":{
@@ -435,7 +409,6 @@
 "rent_house_3":800,
 "rent_house_4":975,
 "rent_hotel":1150,
-"tax":0,
 "monopoly_group_elements":[27, 29]
 },
 "27":{
@@ -451,7 +424,6 @@
 "rent_house_3":800,
 "rent_house_4":975,
 "rent_hotel":1150,
-"tax":0,
 "monopoly_group_elements":[26, 29]
 },
 "28":{
@@ -467,7 +439,6 @@
 "rent_house_3":0,
 "rent_house_4":0,
 "rent_hotel":0,
-"tax":0,
 "monopoly_group_elements":[12]
 },
 "29":{
@@ -483,7 +454,6 @@
 "rent_house_3":850,
 "rent_house_4":1025,
 "rent_hotel":1200,
-"tax":0,
 "monopoly_group_elements":[26, 27]
 },
 "30":{
@@ -498,8 +468,7 @@
 "rent_house_2":0,
 "rent_house_3":0,
 "rent_house_4":0,
-"rent_hotel":0,
-"tax":0
+"rent_hotel":0
 },
 "31":{
 "class":"Street",
@@ -514,7 +483,6 @@
 "rent_house_3":900,
 "rent_house_4":1100,
 "rent_hotel":1275,
-"tax":0,
 "monopoly_group_elements":[32, 34]
 },
 "32":{
@@ -530,7 +498,6 @@
 "rent_house_3":900,
 "rent_house_4":1100,
 "rent_hotel":1275,
-"tax":0,
 "monopoly_group_elements":[31, 34]
 },
 "33":{
@@ -545,8 +512,7 @@
 "rent_house_2":0,
 "rent_house_3":0,
 "rent_house_4":0,
-"rent_hotel":0,
-"tax":0
+"rent_hotel":0
 },
 "34":{
 "class":"Street",
@@ -561,7 +527,6 @@
 "rent_house_3":1000,
 "rent_house_4":1200,
 "rent_hotel":1400,
-"tax":0,
 "monopoly_group_elements":[31, 32]
 },
 "35":{
@@ -577,7 +542,6 @@
 "rent_house_3":0,
 "rent_house_4":0,
 "rent_hotel":0,
-"tax":0,
 "monopoly_group_elements":[5, 15, 25]
 },
 "36":{
@@ -592,8 +556,7 @@
 "rent_house_2":0,
 "rent_house_3":0,
 "rent_house_4":0,
-"rent_hotel":0,
-"tax":0
+"rent_hotel":0
 },
 "37":{
 "class":"Street",
@@ -608,7 +571,6 @@
 "rent_house_3":1100,
 "rent_house_4":1300,
 "rent_hotel":1500,
-"tax":0,
 "monopoly_group_elements":[39]
 },
 "38":{
@@ -639,7 +601,6 @@
 "rent_house_3":1400,
 "rent_house_4":1700,
 "rent_hotel":2000,
-"tax":0,
 "monopoly_group_elements":[37]
 }
 }
