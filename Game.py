@@ -16,8 +16,14 @@ class Game:
 		self.players = players
 		
 		# Initialize Cards
+		self.chanceCardsNumbers = [i for i in range(0, 16)]
+		np.random.shuffle(self.chanceCardsNumbers)
+		self.communityCardsNumbers = [i for i in range(0, 17)]
+		np.random.shuffle(self.communityCardsNumbers)
+
 		self.chanceCards = self.initializeCards(constant.CHANCE_CARD_FILE_NAME)
-		self.communityChestCards = self.initializeCards(constant.COMMUNITY_CARDS_FILE_NAME)
+		self.communityCards = self.initializeCards(constant.COMMUNITY_CARDS_FILE_NAME)
+
 
 		# Dice initialization
 		self.dices = []
@@ -192,6 +198,68 @@ class Game:
 	def drawRandomCard(self, cards):
 		# np.random.shuffle(cards)
 		return cards[0]
+
+	def runChanceCard(self, currState, playerId, cardId):
+		#TODO fill all positions.
+		#TODO Handle cases of passing Go etc.
+
+		positionList = list(currState.position)
+		currPosition = positionList[playerId]
+
+		if cardId == 0:
+			#Move to Go
+			currPosition = 0
+			self.collectMoneyFromBank(currState, playerId, 200)
+		
+		elif cardId == 6:
+			#bank pays $50
+			self.collectMoneyFromBank(currState, playerId, 50)
+
+		elif cardId == 8:
+			#Only 1 case for -3 moves. Never makes position -ve.
+			currPosition = currPosition - 3
+
+		self.movePlayer(currState, playerId, currPosition)
+
+
+	def runCommunityCard(self, currState, playerId, cardId):
+		positionList = list(currState.position)
+		currPosition = positionList[playerId]
+
+		if cardId == 0:
+			#Move to Go
+			currPosition = 0
+			self.collectMoneyFromBank(currState, playerId, 200)
+		
+		elif cardId == 1:
+			#Bank error
+			self.collectMoneyFromBank(currState, playerId, 50)
+		
+		elif cardId == 2:
+			#Doctor fee
+			self.collectMoneyFromBank(currState, playerId, -50)
+
+		elif cardId == 3:
+			#Stock Sale
+			self.collectMoneyFromBank(currState, playerId, 50)
+
+		self.movePlayer(currState, playerId, currPosition)
+
+	def collectMoneyFromBank(self, currState, playerId, amount):
+		cashHolding = list(currState.cashHoldings)
+		cashHolding[playerId] = currState.cashHoldings[playerId] + amount
+		currState.cashHoldings = tuple(newCashHolding)
+
+		# Update Total Money
+		#TODO: If banks goes below 0 :(
+		currState.bankMoney = currState.bankMoney - amount
+
+
+	def movePlayer(self, currState, playerId, newPosition):
+		positionList = list(currState.position)
+		positionList[playerId] = newPosition
+		position = tuple(positionList)
+		currState.position = position
 
 	def diceRolls(self, curState, turnPlayerId):
 		# Returns [isJailed, rolls, totalMoves]
