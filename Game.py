@@ -25,11 +25,20 @@ class Game:
 		self.communityCards = self.initializeCards(constant.COMMUNITY_CARDS_FILE_NAME)
 
 		# Dice initialization
+		self.initDice()
+
+		# Current State
+		self.initState()
+
+		# Registering Board Cell Handlers
+		self.registerBoardCellHandlers()
+
+	def initDice(self):
 		self.dices = []
 		for seed in constant.DICE_SEEDS:
 			self.dices.append(Dice(seed))
 
-		# Current State
+	def initState(self):
 		propertyStatus = [constant.INITIAL_PROPERTY_STATUS for x in range(constant.PROPERTY_COUNT)]
 		
 		self.curState = State(constant.TURN_INIT, \
@@ -41,6 +50,11 @@ class Game:
 
 		# State History
 		self.stateHist = []
+
+	def registerBoardCellHandlers(self):
+		self.boardCellHandlers = dict()
+		self.boardCellHandlers["GoToJail"] = self.handleCellGoToJail
+		self.boardCellHandlers["Tax"] = self.handleCellPayTax
 
 	def run(self):
 		logger.info("Game started!")
@@ -63,6 +77,10 @@ class Game:
 			self.handleNewPosition(self.curState, self.players, turnPlayerId)
 			logger.info("New position: %s", str(self.curState.position))
 			
+			# Calling handler of board cell
+			self.handleBoardCell(self.curState, self.players, turnPlayerId)
+			logger.info("New cash holding: %s", str(self.curState.cashHoldings))
+
 			# Make a move
 			self.runPlayerOnState(turnPlayerId, self.curState)
 
@@ -281,15 +299,44 @@ class Game:
 		 
 		curState.position = tuple(positionList)
 
+	def updateCashHolding(self, curState, playerId, cashToAdd):
+		newCashHolding = list(curState.cashHoldings)
+		newCashHolding[playerId] = curState.cashHoldings[playerId] + cashToAdd
+		curState.cashHoldings = tuple(newCashHolding)
+
 	def displayState(self, curState, players):		
 		for idx, cashHolding in enumerate(curState.cashHoldings):
 			logger.info("Player %d cash holdings: %d", players[idx].id, cashHolding)
 		logger.info("Total Money in the bank: %d", curState.bankMoney)
 
 		logger.info("Final Property Status:")
-		for idx in range(len(curState.propertyStatus) - 2):
-			propertyJson = self.board.boardConfig[str(idx)]
-			logger.info("Property %s: %d", propertyJson["name"], curState.propertyStatus[idx])
+		for idx in range(1, len(curState.propertyStatus) - 2):
+			propertyName = self.board.getPropertyName(str(idx))
+			logger.info("Property %s: %d", propertyName, curState.propertyStatus[idx])
 
 	def isPropertyEmpty(self, curState, position):
 		return curState.propertyStatus[position] == 0
+
+	def handleBoardCell(self, curState, players, turnPlayerId):
+		playerPosition = curState.position[turnPlayerId]
+		boardCellClass = self.board.getPropertyClass(str(playerPosition))
+		if boardCellClass in self.boardCellHandlers:
+			handler = self.boardCellHandlers[boardCellClass]
+			handler(curState, players, turnPlayerId)
+		else:
+			logger.debug("No handler specified")
+
+	def handleCellGoToJail(self, curState, players, turnPlayerId):
+		logger.debug("handleCellGoToJail called")
+		if curState.position[turnPlayerId] == constant.IN_JAIL_INDEX:
+			logger.info("Player: %d staying in jail", players[turnPlayerId].id)
+		else:
+			self.movePlayer(curState, turnPlayerId, constant.IN_JAIL_INDEX)
+			logger.info("Player: %d landed in jail", players[turnPlayerId].id)
+	
+	def handleCellPayTax(self, curState, players, turnPlayerId):
+		logger.debug("handleCellPayTax called")
+		
+		playerPosition = curState.position[turnPlayerId]
+		tax = self.board.getPropertyTax(str(playerPosition))
+		self.updateCashHolding(curState, turnPlayerId, -1 * tax)

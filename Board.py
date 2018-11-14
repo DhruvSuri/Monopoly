@@ -21,3 +21,12 @@ class Board:
 
 	def isPropertyBuyable(self, idx):
 		return self.boardConfig[idx]["price"] > 0
+
+	def getPropertyName(self, idx):
+		return self.boardConfig[idx]["name"]
+
+	def getPropertyClass(self, idx):
+		return self.boardConfig[idx]["class"]
+
+	def getPropertyTax(self, idx):
+		return self.boardConfig[idx]["tax"]

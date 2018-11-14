@@ -30,3 +30,6 @@ class State:
     
     def isPlayerInJail(self, playerId):
         return self.position[playerId] == constant.IN_JAIL_INDEX
+
+    def getPlayerPosition(self, playerId):
+        return self.position[playerId]
