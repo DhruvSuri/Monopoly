@@ -6,7 +6,7 @@ class Player:
 		logger = logging.getLogger("com.sbu.monopoly.player")
 		self.id = id
 		self.state = None
-		logger.info("Player initialized")
+		logger.info("Player %d initialized", self.id)
 
 	def getBMSTDecision(self, state):
 		return None

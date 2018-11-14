@@ -24,7 +24,6 @@ class Game:
 		self.chanceCards = self.initializeCards(constant.CHANCE_CARD_FILE_NAME)
 		self.communityCards = self.initializeCards(constant.COMMUNITY_CARDS_FILE_NAME)
 
-
 		# Dice initialization
 		self.dices = []
 		for seed in constant.DICE_SEEDS:
@@ -49,63 +48,34 @@ class Game:
 		for moveCount in range(constant.MAX_MOVES):
 			logger.info("--------------Move: %d-------------", moveCount + 1)
 
-			# Turn calculation
-			turn = self.curState.turn + 1
-			turnPlayerId = (turn % constant.MAX_PLAYERS)
-			logger.info("Player %d turn", turnPlayerId)
-
-			isJailed, diceRolls, totalMoves = self.diceRolls(self.curState, turnPlayerId)
-
-			if isJailed:
-				self.landInJail(turnPlayerId, self.curState)
-			else:
-				# Calculating new position
-				positionList = list(self.curState.position)
-				currentPosition = positionList[turnPlayerId]
-				
-				# Reset position of player to GO if in Jail
-				if currentPosition == constant.IN_JAIL_INDEX:
-					currentPosition = constant.GO_CELL
-				newPosition = (currentPosition + totalMoves) % self.board.totalBoardCells
-				
-				# Send Player to Jail if reach on go to jail cell
-				if newPosition == constant.GO_TO_JAIL_CELL:
-					positionList[turnPlayerId] = constant.IN_JAIL_INDEX
-				else:
-					positionList[turnPlayerId] = newPosition
-				position = tuple(positionList)
-				logger.info("Moving total %d moves. New position: %s", totalMoves, str(position))
-
-			
-			# Forming new current state
-			self.curState.turn = turn
-			self.curState.diceRoll = diceRolls
-			self.curState.position = position
-
 			# Execute BSMT for all players
-			self.executeBSMT(self.players, self.curState)
+			self.handleBSMT(self.curState, self.players)
+			
+			# Turn calculation
+			turnPlayerId = self.handleTurn(self.curState)
+			logger.info("Player %d turn", self.players[turnPlayerId].id)
+
+			# Dice Rolls
+			diceRolls = self.handleDiceRolls(self.curState, self.players, turnPlayerId)
+			logger.info("Dice Rolls: %s", str(diceRolls))
+
+			# Update Position based on dice roll
+			self.handleNewPosition(self.curState, self.players, turnPlayerId)
+			logger.info("New position: %s", str(self.curState.position))
 			
 			# Make a move
 			self.runPlayerOnState(turnPlayerId, self.curState)
 
 			# Broadcast state to all the players
-			self.broadcastState(self.players, self.curState)
+			self.broadcastState(self.curState, self.players)
 		
-		logger.info("\n\nGame End")
-		logger.info("Final Property Status: %s", str(self.curState.propertyStatus))
-		
-		for idx, cashHolding in enumerate(self.curState.cashHoldings):
-			logger.info("Player %d cash holdings: %d", idx, cashHolding)
-
-		logger.info("Total Money in the bank: %d", self.curState.bankMoney)
+		logger.info("\nGame End\n")
+		self.displayState(self.curState, self.players)
 
 	def runPlayerOnState(self, playerId, curState):
-		logger.info("Player %d making move!!", playerId)
-
 		position = curState.position[playerId]
-		propertyJson = self.board.boardConfig[str(position)]
 
-		if self.isPropertyBuyable(propertyJson):
+		if self.board.isPropertyBuyable(str(position)):
 			if self.isPropertyEmpty(curState, position):
 				self.handleBuy(playerId, curState)
 			elif not playerId == self.getPropertyOwner(curState, position):
@@ -118,7 +88,7 @@ class Game:
 		# ToDo: Model Chance card		
 
 	# Using players as an argument to extend it to multiple players as well.
-	def broadcastState(self, players, curState):
+	def broadcastState(self, curState, players):
 		for player in players:
 			player.receiveState(deepcopy(curState))
 
@@ -176,12 +146,6 @@ class Game:
 			return 1
 		else: 
 			return -1
-
-	def isPropertyEmpty(self, curState, position):
-		return curState.propertyStatus[position] == 0
-
-	def isPropertyBuyable(self, propertyJson):
-		return propertyJson["price"] > 0
 
 	def getPropertyOwner(self, curState, propertyPosition):
 		if curState.propertyStatus[propertyPosition] > 0:
@@ -255,45 +219,77 @@ class Game:
 		currState.bankMoney = currState.bankMoney - amount
 
 
-	def movePlayer(self, currState, playerId, newPosition):
-		positionList = list(currState.position)
-		positionList[playerId] = newPosition
-		position = tuple(positionList)
-		currState.position = position
+	def handleBSMT(self, curState, players):
+		for player in players:
+			action = player.getBMSTDecision(curState)
+			# ToDo: Execute the action
 
-	def diceRolls(self, curState, turnPlayerId):
-		# Returns [isJailed, rolls, totalMoves]
-		# totalMoves is 0 when isJailed is True
-		
-		isJailed = True
-		totalMoves = 0
+	# Turn calculation and update state
+	def handleTurn(self, curState):
+		curState.turn = curState.turn + 1
+		return curState.turn % constant.MAX_PLAYERS
+
+	def handleDiceRolls(self, curState, players, turnPlayerId):
 		rollsHist = []
 		for _ in range(constant.MAX_ROLLS_FOR_JAIL):
 			
 			rolls = []
 			for dice in self.dices:
 				rolls.append(dice.roll())
-			logger.info("Dice Roll: %s", str(rolls))
 			
 			rollsHist.append(tuple(rolls))
-			
-			totalMoves = totalMoves + np.sum(rolls)
-			
+						
 			uniqueRolls = np.unique(rolls)
-			if curState.position[turnPlayerId] == constant.IN_JAIL_INDEX:
-				if len(uniqueRolls) == 1:
-					isJailed = False
+			if curState.isPlayerInJail(turnPlayerId) \
+				or len(uniqueRolls) != 1 \
+				or uniqueRolls[0] != constant.DICE_ROLL_MAX_VALUE:
 				break
-			elif len(uniqueRolls) != 1 or uniqueRolls[0] != constant.DICE_ROLL_MAX_VALUE:
-				isJailed = False
-				break
+
+		# Update current state with the dice roll
+		self.curState.diceRoll = rollsHist
+
+		return rollsHist
+
+	def handleNewPosition(self, curState, players, turnPlayerId):
+		if self.shouldGoToJailFromDiceRoll(curState, players, turnPlayerId):
+			newPosition = constant.IN_JAIL_INDEX
+		else:
+			positionList = list(self.curState.position)
+			currentPosition = positionList[turnPlayerId]
+
+			# Reset position of player to GO if in Jail
+			if currentPosition == constant.IN_JAIL_INDEX:
+				currentPosition = constant.GO_CELL
+
+			totalMoves = np.sum(curState.diceRoll)
+			newPosition = (currentPosition + totalMoves) % self.board.totalBoardCells
+
+		self.movePlayer(curState, turnPlayerId, newPosition)
+
+	def shouldGoToJailFromDiceRoll(self, curState, players, turnPlayerId):
+		uniqueLastRoll = np.unique(curState.diceRoll[-1])
+		if curState.position[turnPlayerId] == constant.IN_JAIL_INDEX:
+			return len(uniqueLastRoll) != 1
 		
-		if isJailed:
-			totalMoves = 0
+		return len(curState.diceRoll) == 3 \
+			and len(uniqueLastRoll) == 1 \
+			and uniqueLastRoll[0] == constant.DICE_ROLL_MAX_VALUE
 
-		return [isJailed, rollsHist, totalMoves]
+	def movePlayer(self, curState, playerId, newPosition):
+		positionList = list(curState.position)
+		positionList[playerId] = newPosition
+		 
+		curState.position = tuple(positionList)
 
-	def executeBSMT(self, players, curState):
-		for player in self.players:
-			action = player.getBMSTDecision(curState)
-			# ToDo: Execute the action
+	def displayState(self, curState, players):		
+		for idx, cashHolding in enumerate(curState.cashHoldings):
+			logger.info("Player %d cash holdings: %d", players[idx].id, cashHolding)
+		logger.info("Total Money in the bank: %d", curState.bankMoney)
+
+		logger.info("Final Property Status:")
+		for idx in range(len(curState.propertyStatus) - 2):
+			propertyJson = self.board.boardConfig[str(idx)]
+			logger.info("Property %s: %d", propertyJson["name"], curState.propertyStatus[idx])
+
+	def isPropertyEmpty(self, curState, position):
+		return curState.propertyStatus[position] == 0

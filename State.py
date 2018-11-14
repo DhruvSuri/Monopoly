@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 from copy import deepcopy
+import Constant as constant
 
 class State:
 
@@ -26,3 +27,6 @@ class State:
                 deepcopy(self.propertyStatus, memo))
             memo[id_self] = _copy 
         return _copy
+    
+    def isPlayerInJail(self, playerId):
+        return self.position[playerId] == constant.IN_JAIL_INDEX
