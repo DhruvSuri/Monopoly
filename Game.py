@@ -15,7 +15,7 @@ class Game:
 
 		self.players = players
 		
-		#Initialize Cards
+		# Initialize Cards
 		self.chanceCards = self.initializeCards(constant.CHANCE_CARD_FILE_NAME)
 		self.communityChestCards = self.initializeCards(constant.COMMUNITY_CARDS_FILE_NAME)
 
@@ -48,17 +48,27 @@ class Game:
 			turnPlayerId = (turn % constant.MAX_PLAYERS)
 			logger.info("Player %d turn", turnPlayerId)
 
-			isJailed, diceRolls, totalMoves = self.diceRolls()
+			isJailed, diceRolls, totalMoves = self.diceRolls(self.curState, turnPlayerId)
 
 			if isJailed:
-				logger.info("Player: %d landed in jail", turnPlayerId)
 				self.landInJail(turnPlayerId, self.curState)
 			else:
 				# Calculating new position
 				positionList = list(self.curState.position)
-				positionList[turnPlayerId] = (positionList[turnPlayerId] + totalMoves) % self.board.totalBoardCells
+				currentPosition = positionList[turnPlayerId]
+				
+				# Reset position of player to GO if in Jail
+				if currentPosition == constant.IN_JAIL_INDEX:
+					currentPosition = constant.GO_CELL
+				newPosition = (currentPosition + totalMoves) % self.board.totalBoardCells
+				
+				# Send Player to Jail if reach on go to jail cell
+				if newPosition == constant.GO_TO_JAIL_CELL:
+					positionList[turnPlayerId] = constant.IN_JAIL_INDEX
+				else:
+					positionList[turnPlayerId] = newPosition
 				position = tuple(positionList)
-				logger.info("Moving total %s moves. New position: %s", str(totalMoves), str(position))
+				logger.info("Moving total %d moves. New position: %s", totalMoves, str(position))
 
 			
 			# Forming new current state
@@ -145,10 +155,14 @@ class Game:
 			logger.info("Property %s purchased by Player: %d. Player cash holding: %d", \
 				str(propertyJson["name"]), playerId, curState.cashHoldings[playerId])
 
-	def landInJail(self, playerId, currState):
-		positionList = list(currState.position)
-		positionList[playerId] = -1
-		currState.position = tuple(positionList)
+	def landInJail(self, playerId, curState):
+		if curState.position[playerId] == constant.IN_JAIL_INDEX:
+			logger.info("Player: %d staying in jail", playerId)
+		else:
+			logger.info("Player: %d landed in jail", playerId)
+			positionList = list(curState.position)
+			positionList[playerId] = constant.IN_JAIL_INDEX
+			curState.position = tuple(positionList)
 
 	def getPropertyStatus(self, playerId):
 		# Define the complete enum for buying property and house
@@ -179,7 +193,7 @@ class Game:
 		# np.random.shuffle(cards)
 		return cards[0]
 
-	def diceRolls(self):
+	def diceRolls(self, curState, turnPlayerId):
 		# Returns [isJailed, rolls, totalMoves]
 		# totalMoves is 0 when isJailed is True
 		
@@ -198,7 +212,11 @@ class Game:
 			totalMoves = totalMoves + np.sum(rolls)
 			
 			uniqueRolls = np.unique(rolls)
-			if len(uniqueRolls) != 1 or uniqueRolls[0] != constant.DICE_ROLL_MAX_VALUE:
+			if curState.position[turnPlayerId] == constant.IN_JAIL_INDEX:
+				if len(uniqueRolls) == 1:
+					isJailed = False
+				break
+			elif len(uniqueRolls) != 1 or uniqueRolls[0] != constant.DICE_ROLL_MAX_VALUE:
 				isJailed = False
 				break
 		
