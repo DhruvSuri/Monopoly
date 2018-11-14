@@ -18,7 +18,7 @@ class Game:
 		# Initialize Cards
 		self.chanceCardsNumbers = [i for i in range(0, 16)]
 		np.random.shuffle(self.chanceCardsNumbers)
-		self.communityCardsNumbers = [i for i in range(0, 17)]
+		self.communityCardsNumbers = [i for i in range(0, 16)]
 		np.random.shuffle(self.communityCardsNumbers)
 
 		self.chanceCards = self.initializeCards(constant.CHANCE_CARD_FILE_NAME)
@@ -41,7 +41,7 @@ class Game:
 	def initState(self):
 		propertyStatus = [constant.INITIAL_PROPERTY_STATUS for x in range(constant.PROPERTY_COUNT)]
 		
-		self.curState = State(constant.TURN_INIT, \
+		self.currState = State(constant.TURN_INIT, \
 							constant.INITIAL_DICE_ROLL, \
 							constant.INITIAL_POSITION, \
 							constant.INITIAL_CASH_HOLDINGS, \
@@ -63,100 +63,102 @@ class Game:
 			logger.info("--------------Move: %d-------------", moveCount + 1)
 
 			# Execute BSMT for all players
-			self.handleBSMT(self.curState, self.players)
+			self.handleBSMT(self.currState, self.players)
 			
 			# Turn calculation
-			turnPlayerId = self.handleTurn(self.curState)
+			turnPlayerId = self.handleTurn(self.currState)
 			logger.info("Player %d turn", self.players[turnPlayerId].id)
 
 			# Dice Rolls
-			diceRolls = self.handleDiceRolls(self.curState, self.players, turnPlayerId)
+			diceRolls = self.handleDiceRolls(self.currState, self.players, turnPlayerId)
 			logger.info("Dice Rolls: %s", str(diceRolls))
 
 			# Update Position based on dice roll
-			self.handleNewPosition(self.curState, self.players, turnPlayerId)
-			logger.info("New position: %s", str(self.curState.position))
+			self.handleNewPosition(self.currState, self.players, turnPlayerId)
+			logger.info("New position: %s", str(self.currState.position))
 			
 			# Calling handler of board cell
-			self.handleBoardCell(self.curState, self.players, turnPlayerId)
-			logger.info("New cash holding: %s", str(self.curState.cashHoldings))
+			self.handleBoardCell(self.currState, self.players, turnPlayerId)
+			logger.info("New cash holding: %s", str(self.currState.cashHoldings))
 
 			# Make a move
-			self.runPlayerOnState(turnPlayerId, self.curState)
+			self.runPlayerOnState(turnPlayerId, self.currState)
 
 			# Broadcast state to all the players
-			self.broadcastState(self.curState, self.players)
+			self.broadcastState(self.currState, self.players)
 		
 		logger.info("\nGame End\n")
-		self.displayState(self.curState, self.players)
+		self.displayState(self.currState, self.players)
 
-	def runPlayerOnState(self, playerId, curState):
-		position = curState.position[playerId]
+	def runPlayerOnState(self, playerId, currState):
+		position = currState.position[playerId]
 
 		if self.board.isPropertyBuyable(str(position)):
-			if self.isPropertyEmpty(curState, position):
-				self.handleBuy(playerId, curState)
-			elif not playerId == self.getPropertyOwner(curState, position):
-				self.handleRent(playerId, curState)
-			else:
-				# ToDo: Model building house, hotels
-				pass
+			if self.isPropertyEmpty(currState, position):
+				self.handleBuy(playerId, currState)
+			elif not playerId == self.getPropertyOwner(currState, position):
+				self.handleRent(playerId, currState)
+		elif self.board.isChanceCardPosition(str(position)):
+			self.runChanceCard(currState, playerId)
+		elif self.board.isCommunityCardPosition(str(position)):
+			self.runCommunityCard(currState, playerId)
+		else:
+			logger.debug("Board Position not modelled")
 
-		# ToDo: Model getting out of JAIL
-		# ToDo: Model Chance card		
+		# ToDo: Model getting out of JAIL		
 
 	# Using players as an argument to extend it to multiple players as well.
-	def broadcastState(self, curState, players):
+	def broadcastState(self, currState, players):
 		for player in players:
-			player.receiveState(deepcopy(curState))
+			player.receiveState(deepcopy(currState))
 
-	def handleRent(self, playerId, curState):
-		position = curState.position[playerId]
+	def handleRent(self, playerId, currState):
+		position = currState.position[playerId]
 		propertyJson = self.board.boardConfig[str(position)]
 
-		ownerId = self.getPropertyOwner(curState, position)
+		ownerId = self.getPropertyOwner(currState, position)
 		
 		# ToDo: Model Rent based on house, hotels etc.
 		rent = propertyJson["rent"]
 		
-		newCashHolding = list(curState.cashHoldings)
-		newCashHolding[ownerId] = curState.cashHoldings[ownerId] + rent
+		newCashHolding = list(currState.cashHoldings)
+		newCashHolding[ownerId] = currState.cashHoldings[ownerId] + rent
 
 		# ToDo: Handle what to do in case of not enough money
-		newCashHolding[playerId] = curState.cashHoldings[playerId] - rent
+		newCashHolding[playerId] = currState.cashHoldings[playerId] - rent
 
 		logger.info("Rent paid by Player: %d is %d", playerId, rent)
-		curState.cashHoldings = tuple(newCashHolding)
+		currState.cashHoldings = tuple(newCashHolding)
 		
-	def handleBuy(self, playerId, curState):
-		position = curState.position[playerId]
+	def handleBuy(self, playerId, currState):
+		position = currState.position[playerId]
 		propertyJson = self.board.boardConfig[str(position)]
 
-		if (curState.cashHoldings[playerId] >= propertyJson["price"] \
-			and self.players[playerId].buyProperty(curState)):
+		if (currState.cashHoldings[playerId] >= propertyJson["price"] \
+			and self.players[playerId].buyProperty(currState)):
 
 			# Update Property Status
-			curState.propertyStatus[position] = self.getPropertyStatus(playerId)
+			currState.propertyStatus[position] = self.getPropertyStatus(playerId)
 			
 			# Update cash holdings of Player
-			newCashHolding = list(curState.cashHoldings)
-			newCashHolding[playerId] = curState.cashHoldings[playerId] - propertyJson["price"]
-			curState.cashHoldings = tuple(newCashHolding)
+			newCashHolding = list(currState.cashHoldings)
+			newCashHolding[playerId] = currState.cashHoldings[playerId] - propertyJson["price"]
+			currState.cashHoldings = tuple(newCashHolding)
 
 			# Update Total Money
-			curState.bankMoney = curState.bankMoney + propertyJson["price"]
+			currState.bankMoney = currState.bankMoney + propertyJson["price"]
 
 			logger.info("Property %s purchased by Player: %d. Player cash holding: %d", \
-				str(propertyJson["name"]), playerId, curState.cashHoldings[playerId])
+				str(propertyJson["name"]), playerId, currState.cashHoldings[playerId])
 
-	def landInJail(self, playerId, curState):
-		if curState.position[playerId] == constant.IN_JAIL_INDEX:
+	def landInJail(self, playerId, currState):
+		if currState.position[playerId] == constant.IN_JAIL_INDEX:
 			logger.info("Player: %d staying in jail", playerId)
 		else:
 			logger.info("Player: %d landed in jail", playerId)
-			positionList = list(curState.position)
+			positionList = list(currState.position)
 			positionList[playerId] = constant.IN_JAIL_INDEX
-			curState.position = tuple(positionList)
+			currState.position = tuple(positionList)
 
 	def getPropertyStatus(self, playerId):
 		# Define the complete enum for buying property and house
@@ -165,8 +167,8 @@ class Game:
 		else: 
 			return -1
 
-	def getPropertyOwner(self, curState, propertyPosition):
-		if curState.propertyStatus[propertyPosition] > 0:
+	def getPropertyOwner(self, currState, propertyPosition):
+		if currState.propertyStatus[propertyPosition] > 0:
 			return 0
 		else:
 			return 1
@@ -181,73 +183,66 @@ class Game:
 		# np.random.shuffle(cards)
 		return cards[0]
 
-	def runChanceCard(self, currState, playerId, cardId):
+	def runChanceCard(self, currState, playerId):
 		#TODO fill all positions.
-		#TODO Handle cases of passing Go etc.
+		
+		cardId = self.chanceCardsNumbers.pop(0)
+		self.chanceCardsNumbers.append(cardId)
+		card = self.chanceCards[cardId]
+		logger.info("Running Chance card")
 
 		positionList = list(currState.position)
 		currPosition = positionList[playerId]
 
-		if cardId == 0:
-			#Move to Go
-			currPosition = 0
-			self.collectMoneyFromBank(currState, playerId, 200)
 		
-		elif cardId == 6:
-			#bank pays $50
-			self.collectMoneyFromBank(currState, playerId, 50)
-
+		if card["type"] == constant.SETTLE_AMOUNT_WITH_BANK:
+			self.handleCollectMoneyFromBank(currState, playerId,int(card["money"]))
+		elif card["type"] == constant.GET_OUT_OF_JAIL:
+			self.handleGetOutOfJail(currState, playerId)
+		elif cardId == 0:
+			#Move to Go
+			currPosition = constant.GO_CELL
+			self.handleCollectMoneyFromBank(currState, playerId, 200)
+		
 		elif cardId == 8:
 			#Only 1 case for -3 moves. Never makes position -ve.
 			currPosition = currPosition - 3
+		else:
+			logger.info("Chance card not modelled for this position")
 
+		#TODO model all cards
 		self.movePlayer(currState, playerId, currPosition)
 
 
-	def runCommunityCard(self, currState, playerId, cardId):
+	def runCommunityCard(self, currState, playerId):
+		cardId = self.communityCardsNumbers.pop(0)
+		card = self.communityCards[cardId]
+		self.communityCardsNumbers.append(cardId)
+		logger.info("Running Community Card: %d", cardId)
+
 		positionList = list(currState.position)
 		currPosition = positionList[playerId]
 
-		if cardId == 0:
-			#Move to Go
-			currPosition = 0
-			self.collectMoneyFromBank(currState, playerId, 200)
-		
-		elif cardId == 1:
-			#Bank error
-			self.collectMoneyFromBank(currState, playerId, 50)
-		
-		elif cardId == 2:
-			#Doctor fee
-			self.collectMoneyFromBank(currState, playerId, -50)
-
-		elif cardId == 3:
-			#Stock Sale
-			self.collectMoneyFromBank(currState, playerId, 50)
-
+		if card["type"] == constant.SETTLE_AMOUNT_WITH_BANK:
+			self.handleCollectMoneyFromBank(currState, playerId,int(card["money"]))
+		elif card["type"] == constant.GET_OUT_OF_JAIL:
+			self.handleGetOutOfJail(currState, playerId)
+		else:
+			logger.info("Community Chest card not modelled for this position")
+		#TODO model all cards
 		self.movePlayer(currState, playerId, currPosition)
 
-	def collectMoneyFromBank(self, currState, playerId, amount):
-		cashHolding = list(currState.cashHoldings)
-		cashHolding[playerId] = currState.cashHoldings[playerId] + amount
-		currState.cashHoldings = tuple(newCashHolding)
-
-		# Update Total Money
-		#TODO: If banks goes below 0 :(
-		currState.bankMoney = currState.bankMoney - amount
-
-
-	def handleBSMT(self, curState, players):
+	def handleBSMT(self, currState, players):
 		for player in players:
-			action = player.getBMSTDecision(curState)
+			action = player.getBMSTDecision(currState)
 			# ToDo: Execute the action
 
 	# Turn calculation and update state
-	def handleTurn(self, curState):
-		curState.turn = curState.turn + 1
-		return curState.turn % constant.MAX_PLAYERS
+	def handleTurn(self, currState):
+		currState.turn = currState.turn + 1
+		return currState.turn % constant.MAX_PLAYERS
 
-	def handleDiceRolls(self, curState, players, turnPlayerId):
+	def handleDiceRolls(self, currState, players, turnPlayerId):
 		rollsHist = []
 		for _ in range(constant.MAX_ROLLS_FOR_JAIL):
 			
@@ -258,85 +253,100 @@ class Game:
 			rollsHist.append(tuple(rolls))
 						
 			uniqueRolls = np.unique(rolls)
-			if curState.isPlayerInJail(turnPlayerId) \
+			if currState.isPlayerInJail(turnPlayerId) \
 				or len(uniqueRolls) != 1 \
 				or uniqueRolls[0] != constant.DICE_ROLL_MAX_VALUE:
 				break
 
 		# Update current state with the dice roll
-		self.curState.diceRoll = rollsHist
+		self.currState.diceRoll = rollsHist
 
 		return rollsHist
 
-	def handleNewPosition(self, curState, players, turnPlayerId):
-		if self.shouldGoToJailFromDiceRoll(curState, players, turnPlayerId):
+	def handleNewPosition(self, currState, players, turnPlayerId):
+		if self.shouldGoToJailFromDiceRoll(currState, players, turnPlayerId):
 			newPosition = constant.IN_JAIL_INDEX
 		else:
-			positionList = list(self.curState.position)
+			positionList = list(self.currState.position)
 			currentPosition = positionList[turnPlayerId]
-
+			
+			# Doubt
 			# Reset position of player to GO if in Jail
 			if currentPosition == constant.IN_JAIL_INDEX:
 				currentPosition = constant.GO_CELL
 
-			totalMoves = np.sum(curState.diceRoll)
+			totalMoves = np.sum(currState.diceRoll)
 			newPosition = (currentPosition + totalMoves) % self.board.totalBoardCells
 
-		self.movePlayer(curState, turnPlayerId, newPosition)
+		self.movePlayer(currState, turnPlayerId, newPosition)
 
-	def shouldGoToJailFromDiceRoll(self, curState, players, turnPlayerId):
-		uniqueLastRoll = np.unique(curState.diceRoll[-1])
-		if curState.position[turnPlayerId] == constant.IN_JAIL_INDEX:
+	def shouldGoToJailFromDiceRoll(self, currState, players, turnPlayerId):
+		uniqueLastRoll = np.unique(currState.diceRoll[-1])
+		if currState.position[turnPlayerId] == constant.IN_JAIL_INDEX:
 			return len(uniqueLastRoll) != 1
 		
-		return len(curState.diceRoll) == 3 \
+		return len(currState.diceRoll) == 3 \
 			and len(uniqueLastRoll) == 1 \
 			and uniqueLastRoll[0] == constant.DICE_ROLL_MAX_VALUE
 
-	def movePlayer(self, curState, playerId, newPosition):
-		positionList = list(curState.position)
+	def movePlayer(self, currState, playerId, newPosition):
+		positionList = list(currState.position)
 		positionList[playerId] = newPosition
 		 
-		curState.position = tuple(positionList)
+		currState.position = tuple(positionList)
 
-	def updateCashHolding(self, curState, playerId, cashToAdd):
-		newCashHolding = list(curState.cashHoldings)
-		newCashHolding[playerId] = curState.cashHoldings[playerId] + cashToAdd
-		curState.cashHoldings = tuple(newCashHolding)
+	def updateCashHolding(self, currState, playerId, cashToAdd):
+		newCashHolding = list(currState.cashHoldings)
+		newCashHolding[playerId] = currState.cashHoldings[playerId] + cashToAdd
+		currState.cashHoldings = tuple(newCashHolding)
 
-	def displayState(self, curState, players):		
-		for idx, cashHolding in enumerate(curState.cashHoldings):
+	def displayState(self, currState, players):		
+		for idx, cashHolding in enumerate(currState.cashHoldings):
 			logger.info("Player %d cash holdings: %d", players[idx].id, cashHolding)
-		logger.info("Total Money in the bank: %d", curState.bankMoney)
+		logger.info("Total Money in the bank: %d", currState.bankMoney)
 
 		logger.info("Final Property Status:")
-		for idx in range(1, len(curState.propertyStatus) - 2):
+		for idx in range(1, len(currState.propertyStatus) - 2):
 			propertyName = self.board.getPropertyName(str(idx))
-			logger.info("Property %s: %d", propertyName, curState.propertyStatus[idx])
+			logger.info("Property %s: %d", propertyName, currState.propertyStatus[idx])
 
-	def isPropertyEmpty(self, curState, position):
-		return curState.propertyStatus[position] == 0
+	def isPropertyEmpty(self, currState, position):
+		return currState.propertyStatus[position] == 0
 
-	def handleBoardCell(self, curState, players, turnPlayerId):
-		playerPosition = curState.position[turnPlayerId]
+	def handleCollectMoneyFromBank(self, currState, playerId, amount):
+		cashHolding = list(currState.cashHoldings)
+		cashHolding[playerId] = currState.cashHoldings[playerId] + amount
+		currState.cashHoldings = tuple(cashHolding)
+
+		#TODO: If banks goes below 0 :(
+		currState.bankMoney = currState.bankMoney - amount
+
+	def handleBoardCell(self, currState, players, turnPlayerId):
+		playerPosition = currState.position[turnPlayerId]
 		boardCellClass = self.board.getPropertyClass(str(playerPosition))
 		if boardCellClass in self.boardCellHandlers:
 			handler = self.boardCellHandlers[boardCellClass]
-			handler(curState, players, turnPlayerId)
+			handler(currState, players, turnPlayerId)
 		else:
 			logger.debug("No handler specified")
 
-	def handleCellGoToJail(self, curState, players, turnPlayerId):
+	#Doubt : duplicate of landInJail
+	def handleCellGoToJail(self, currState, players, turnPlayerId):
 		logger.debug("handleCellGoToJail called")
-		if curState.position[turnPlayerId] == constant.IN_JAIL_INDEX:
+		if currState.position[turnPlayerId] == constant.IN_JAIL_INDEX:
 			logger.info("Player: %d staying in jail", players[turnPlayerId].id)
 		else:
-			self.movePlayer(curState, turnPlayerId, constant.IN_JAIL_INDEX)
+			self.movePlayer(currState, turnPlayerId, constant.IN_JAIL_INDEX)
 			logger.info("Player: %d landed in jail", players[turnPlayerId].id)
 	
-	def handleCellPayTax(self, curState, players, turnPlayerId):
+	def handleGetOutOfJail(self, currState, turnPlayerId):
+		if currState.position[turnPlayerId] == constant.IN_JAIL_INDEX:
+			self.movePlayer(currState, turnPlayerId, constant.GO_CELL)
+			logger.info("Player: %d moved out of jail", players[turnPlayerId].id)
+
+	def handleCellPayTax(self, currState, players, turnPlayerId):
 		logger.debug("handleCellPayTax called")
 		
-		playerPosition = curState.position[turnPlayerId]
+		playerPosition = currState.position[turnPlayerId]
 		tax = self.board.getPropertyTax(str(playerPosition))
-		self.updateCashHolding(curState, turnPlayerId, -1 * tax)
+		self.updateCashHolding(currState, turnPlayerId, -1 * tax)
