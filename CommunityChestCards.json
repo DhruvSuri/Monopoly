@@ -10,7 +10,7 @@
   {
     "id": 1,
     "content": "Bank error in your favor, collect $200",
-    "type": 1,
+    "type": "SETTLE_AMOUNT_WITH_BANK",
     "position": 0,
     "money": 200,
     "money2": 0
@@ -18,7 +18,7 @@
   {
     "id": 2,
     "content": "Doctor's fees, Pay $50",
-    "type": 1,
+    "type": "SETTLE_AMOUNT_WITH_BANK",
     "position": 0,
     "money": -50,
     "money2": 0
@@ -26,7 +26,7 @@
   {
     "id": 3,
     "content": "From sale of stock you get $50",
-    "type": 1,
+    "type": "SETTLE_AMOUNT_WITH_BANK",
     "position": 0,
     "money": 50,
     "money2": 0
@@ -34,7 +34,7 @@
   {
     "id": 4,
     "content": "Get out of jail free, this card may be kept until needed",
-    "type": 4,
+    "type": "GET_OUT_OF_JAIL",
     "position": 0,
     "money": 0,
     "money2": 0
@@ -58,7 +58,7 @@
   {
     "id": 7,
     "content": "Holiday Fund matures - Receive $100",
-    "type": 1,
+    "type": "SETTLE_AMOUNT_WITH_BANK",
     "position": 0,
     "money": 100,
     "money2": 0
@@ -66,7 +66,7 @@
   {
     "id": 8,
     "content": "Income Tax refund. Collect $20",
-    "type": 1,
+    "type": "SETTLE_AMOUNT_WITH_BANK",
     "position": 0,
     "money": 20,
     "money2": 0
@@ -74,7 +74,7 @@
   {
     "id": 9,
     "content": "Life Insurance Matures - Collect $100",
-    "type": 1,
+    "type": "SETTLE_AMOUNT_WITH_BANK",
     "position": 0,
     "money": 100,
     "money2": 0
@@ -82,7 +82,7 @@
   {
     "id": 10,
     "content": "Pay Hospital Fees of $50",
-    "type": 1,
+    "type": "SETTLE_AMOUNT_WITH_BANK",
     "position": 0,
     "money": -50,
     "money2": 0
@@ -90,7 +90,7 @@
   {
     "id": 11,
     "content": "Pay School Fees of $50",
-    "type": 1,
+    "type": "SETTLE_AMOUNT_WITH_BANK",
     "position": 0,
     "money": -50,
     "money2": 0
@@ -98,7 +98,7 @@
   {
     "id": 12,
     "content": "Receive $25 Consultancy Fee",
-    "type": 1,
+    "type": "SETTLE_AMOUNT_WITH_BANK",
     "position": 0,
     "money": 25,
     "money2": 0
@@ -114,7 +114,7 @@
   {
     "id": 14,
     "content": "You have won second prize in a beauty contest– collect $10",
-    "type": 1,
+    "type": "SETTLE_AMOUNT_WITH_BANK",
     "position": 0,
     "money": 10,
     "money2": 0
@@ -122,7 +122,7 @@
   {
     "id": 15,
     "content": "You inherit $100",
-    "type": 1,
+    "type": "SETTLE_AMOUNT_WITH_BANK",
     "position": 0,
     "money": 100,
     "money2": 0

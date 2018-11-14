@@ -22,6 +22,12 @@ class Board:
 	def isPropertyBuyable(self, idx):
 		return self.boardConfig[str(idx)]["price"] > 0
 
+	def isChanceCardPosition(self, idx):
+		return self.getPropertyClass(idx) == "Chance"
+
+	def isCommunityCardPosition(self, idx):
+		return self.getPropertyClass(idx) == "Chest"
+
 	def getPropertyName(self, idx):
 		return self.boardConfig[str(idx)]["name"]
 

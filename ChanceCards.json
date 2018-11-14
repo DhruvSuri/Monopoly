@@ -50,7 +50,7 @@
   {
     "id": 6,
     "content": "Bank pays you dividend of $50",
-    "type": 1,
+    "type": "SETTLE_AMOUNT_WITH_BANK",
     "position": 0,
     "money": 50,
     "money2": 0
@@ -58,7 +58,7 @@
   {
     "id": 7,
     "content": "Get out of Jail free, this card may be kept until needed, or traded",
-    "type": 4,
+    "type": "GET_OUT_OF_JAIL",
     "position": 0,
     "money": 0,
     "money2": 0
@@ -90,9 +90,9 @@
   {
     "id": 11,
     "content": "Pay poor tax of $15",
-    "type": 1,
+    "type": "SETTLE_AMOUNT_WITH_BANK",
     "position": 0,
-    "money": 15,
+    "money": -15,
     "money2": 0
   },
   {
@@ -122,7 +122,7 @@
   {
     "id": 15,
     "content": "Your building loan matures, collect $150",
-    "type": 1,
+    "type": "SETTLE_AMOUNT_WITH_BANK",
     "position": 0,
     "money": 150,
     "money2": 0
