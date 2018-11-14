@@ -56,6 +56,8 @@ class Game:
 		self.boardCellHandlers["GoToJail"] = self.handleCellGoToJail
 		self.boardCellHandlers["Tax"] = self.handleCellPayTax
 		self.boardCellHandlers["Street"] = self.handleCellStreet
+		self.boardCellHandlers["Chance"] = self.runChanceCard
+		self.boardCellHandlers["Chest"] = self.runCommunityCard
 
 	def run(self):
 		logger.info("Game started!")
@@ -88,18 +90,6 @@ class Game:
 		logger.info("\nGame End\n")
 		self.displayState(self.currState, self.players)
 
-	def runPlayerOnState(self, playerId, currState):
-		position = currState.position[playerId]
-
-		if self.board.isPropertyBuyable(str(position)):
-			pass
-		elif self.board.isChanceCardPosition(str(position)):
-			self.runChanceCard(currState, playerId)
-		elif self.board.isCommunityCardPosition(str(position)):
-			self.runCommunityCard(currState, playerId)
-		else:
-			logger.debug("Board Position not modelled")
-
 		# ToDo: Model getting out of JAIL		
 
 	# Using players as an argument to extend it to multiple players as well.
@@ -117,7 +107,7 @@ class Game:
 		# np.random.shuffle(cards)
 		return cards[0]
 
-	def runChanceCard(self, currState, playerId):
+	def runChanceCard(self, currState, players, playerId):
 		#TODO fill all positions.
 		
 		cardId = self.chanceCardsNumbers.pop(0)
@@ -147,7 +137,7 @@ class Game:
 		self.movePlayer(currState, playerId, currPosition)
 
 
-	def runCommunityCard(self, currState, playerId):
+	def runCommunityCard(self, currState, players, playerId):
 		cardId = self.communityCardsNumbers.pop(0)
 		card = self.communityCards[cardId]
 		self.communityCardsNumbers.append(cardId)
@@ -159,7 +149,7 @@ class Game:
 		if card["type"] == constant.SETTLE_AMOUNT_WITH_BANK:
 			self.handleCollectMoneyFromBank(currState, playerId,int(card["money"]))
 		elif card["type"] == constant.GET_OUT_OF_JAIL:
-			self.handleGetOutOfJail(currState, playerId)
+			self.handleGetOutOfJail(currState, players, playerId)
 		else:
 			logger.info("Community Chest card not modelled for this position")
 		#TODO model all cards
@@ -254,16 +244,6 @@ class Game:
 			self.movePlayer(currState, turnPlayerId, constant.IN_JAIL_INDEX)
 			logger.info("Player: %d landed in jail", players[turnPlayerId].id)
 	
-	def handleGetOutOfJail(self, currState, players, turnPlayerId):
-		if currState.position[turnPlayerId] == constant.IN_JAIL_INDEX:
-			self.movePlayer(currState, turnPlayerId, constant.GO_CELL)
-			logger.info("Player: %d moved out of jail", players[turnPlayerId].id)
-
-	def handleCollectMoneyFromBank(self, currState, playerId, amount):
-		cashHolding = list(currState.cashHoldings)
-		cashHolding[playerId] = currState.cashHoldings[playerId] + amount
-		currState.cashHoldings = tuple(cashHolding)
-
 	def handleCellPayTax(self, currState, players, turnPlayerId):
 		logger.debug("handleCellPayTax called")
 		
@@ -301,3 +281,13 @@ class Game:
 
 			logger.info("Property %s purchased by Player: %d. Player cash holding: %d", \
 				self.board.getPropertyName(propertyPosition), playerId, currState.cashHoldings[playerId])
+
+	def handleGetOutOfJail(self, currState, players, turnPlayerId):
+		if currState.position[turnPlayerId] == constant.IN_JAIL_INDEX:
+			self.movePlayer(currState, turnPlayerId, constant.GO_CELL)
+			logger.info("Player: %d moved out of jail", players[turnPlayerId].id)
+
+	def handleCollectMoneyFromBank(self, currState, playerId, amount):
+		cashHolding = list(currState.cashHoldings)
+		cashHolding[playerId] = currState.cashHoldings[playerId] + amount
+		currState.cashHoldings = tuple(cashHolding)
