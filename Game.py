@@ -92,6 +92,9 @@ class Game:
 
 			# Broadcast state to all the players
 			self.broadcastState(self.currState, self.players)
+
+			# Maintaining state histor
+			self.stateHist.append(deepcopy(self.currState))
 		
 		logger.info("\nGame End\n")
 		self.displayState(self.currState, self.players)
@@ -236,7 +239,6 @@ class Game:
 		else: 
 			#Greedy Buy house. Have to be moved to BSMT
 			self.buyHouse(currState, turnPlayerId, position)
-			
 
 	def handleCellRailRoad(self, currState, players, turnPlayerId):
 		self.handleCellStreet(currState, players, turnPlayerId)
