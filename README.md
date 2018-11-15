@@ -8,12 +8,14 @@ Note: This project is under active development from scratch.
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
 
+This is a console based game. Currently, it only supports bot vs bot but it's extensible.
+
 ### Prerequisites
 
 What things you need to install the software and how to install them
 
-python3
-numpy
+* python3
+* numpy
 
 ## Playing game
 To start playing the game download the code and run "rungame.py"
@@ -21,8 +23,6 @@ To start playing the game download the code and run "rungame.py"
 chmod +x rungame.py
 ./rungame.py
 ```
-
-This is a console based game. Currently, it only supports bot vs bot but it's extensible.
 ## Test cases
 
 ### Running
