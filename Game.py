@@ -16,13 +16,7 @@ class Game:
 		self.players = players
 		
 		# Initialize Cards
-		self.chanceCardsNumbers = [i for i in range(0, 16)]
-		np.random.shuffle(self.chanceCardsNumbers)
-		self.communityCardsNumbers = [i for i in range(0, 16)]
-		np.random.shuffle(self.communityCardsNumbers)
-
-		self.chanceCards = self.initializeCards(constant.CHANCE_CARD_FILE_NAME)
-		self.communityCards = self.initializeCards(constant.COMMUNITY_CARDS_FILE_NAME)
+		self.initCards()
 
 		# Dice initialization
 		self.initDice()
@@ -32,6 +26,15 @@ class Game:
 
 		# Registering Board Cell Handlers
 		self.registerBoardCellHandlers()
+
+	def initCards(self):
+		# Chance cards
+		self.chanceCardsNumbers = [i for i in range(0, 16)]
+		np.random.shuffle(self.chanceCardsNumbers)
+		
+		# Community Chest cards
+		self.communityCardsNumbers = [i for i in range(0, 16)]
+		np.random.shuffle(self.communityCardsNumbers)
 
 	def initDice(self):
 		self.dices = []
@@ -51,13 +54,16 @@ class Game:
 		# State History
 		self.stateHist = []
 
+	# Register handlers based on the class
 	def registerBoardCellHandlers(self):
 		self.boardCellHandlers = dict()
 		self.boardCellHandlers["GoToJail"] = self.handleCellGoToJail
 		self.boardCellHandlers["Tax"] = self.handleCellPayTax
 		self.boardCellHandlers["Street"] = self.handleCellStreet
-		self.boardCellHandlers["Chance"] = self.runChanceCard
-		self.boardCellHandlers["Chest"] = self.runCommunityCard
+		self.boardCellHandlers["RailRoad"] = self.handleCellRailRoad
+		self.boardCellHandlers["Utility"] = self.handleCellUtility
+		self.boardCellHandlers["Chance"] = self.handleChanceCard
+		self.boardCellHandlers["Chest"] = self.handleCommunityCard
 
 	def run(self):
 		logger.info("Game started!")
@@ -90,75 +96,15 @@ class Game:
 		logger.info("\nGame End\n")
 		self.displayState(self.currState, self.players)
 
-		# ToDo: Model getting out of JAIL		
-
 	# Using players as an argument to extend it to multiple players as well.
 	def broadcastState(self, currState, players):
 		for player in players:
 			player.receiveState(deepcopy(currState))
 
-	def initializeCards(self, fileName):
-		with open(fileName, 'r') as f:
-			cards = json.load(f)
-		np.random.shuffle(cards)
-		return cards
-
-	def drawRandomCard(self, cards):
-		# np.random.shuffle(cards)
-		return cards[0]
-
-	def runChanceCard(self, currState, players, playerId):
-		#TODO fill all positions.
-		
-		cardId = self.chanceCardsNumbers.pop(0)
-		self.chanceCardsNumbers.append(cardId)
-		card = self.chanceCards[cardId]
-		logger.info("Running Chance card")
-
-		positionList = list(currState.position)
-		currPosition = positionList[playerId]
-		
-		if card["type"] == constant.SETTLE_AMOUNT_WITH_BANK:
-			self.handleCollectMoneyFromBank(currState, playerId,int(card["money"]))
-		elif card["type"] == constant.GET_OUT_OF_JAIL:
-			self.handleGetOutOfJail(currState, self.players, playerId)
-		elif cardId == 0:
-			#Move to Go
-			currPosition = constant.GO_CELL
-			self.handleCollectMoneyFromBank(currState, playerId, 200)
-		
-		elif cardId == 8:
-			#Only 1 case for -3 moves. Never makes position -ve.
-			currPosition = currPosition - 3
-		else:
-			logger.info("Chance card not modelled for this position")
-
-		#TODO model all cards
-		self.movePlayer(currState, playerId, currPosition)
-
-
-	def runCommunityCard(self, currState, players, playerId):
-		cardId = self.communityCardsNumbers.pop(0)
-		card = self.communityCards[cardId]
-		self.communityCardsNumbers.append(cardId)
-		logger.info("Running Community Card: %d", cardId)
-
-		positionList = list(currState.position)
-		currPosition = positionList[playerId]
-
-		if card["type"] == constant.SETTLE_AMOUNT_WITH_BANK:
-			self.handleCollectMoneyFromBank(currState, playerId,int(card["money"]))
-		elif card["type"] == constant.GET_OUT_OF_JAIL:
-			self.handleGetOutOfJail(currState, players, playerId)
-		else:
-			logger.info("Community Chest card not modelled for this position")
-		#TODO model all cards
-		self.movePlayer(currState, playerId, currPosition)
-
 	def handleBSMT(self, currState, players):
 		for player in players:
 			action = player.getBMSTDecision(currState)
-			# ToDo: Execute the action
+			# TODO: Execute the action
 
 	# Turn calculation and update state
 	def handleTurn(self, currState):
@@ -176,9 +122,7 @@ class Game:
 			rollsHist.append(tuple(rolls))
 						
 			uniqueRolls = np.unique(rolls)
-			if currState.isPlayerInJail(turnPlayerId) \
-				or len(uniqueRolls) != 1 \
-				or uniqueRolls[0] != constant.DICE_ROLL_MAX_VALUE:
+			if currState.isPlayerInJail(turnPlayerId) or len(uniqueRolls) != 1:
 				break
 
 		# Update current state with the dice roll
@@ -193,7 +137,7 @@ class Game:
 			positionList = list(self.currState.position)
 			currentPosition = positionList[turnPlayerId]
 
-			# Reset position of player to GO if in Jail
+			# Reset position of player to GO if in Jail and getting out now
 			if currentPosition == constant.IN_JAIL_INDEX:
 				currentPosition = constant.GO_CELL
 
@@ -207,9 +151,7 @@ class Game:
 		if currState.position[turnPlayerId] == constant.IN_JAIL_INDEX:
 			return len(uniqueLastRoll) != 1
 		
-		return len(currState.diceRoll) == 3 \
-			and len(uniqueLastRoll) == 1 \
-			and uniqueLastRoll[0] == constant.DICE_ROLL_MAX_VALUE
+		return len(currState.diceRoll) == 3 and len(uniqueLastRoll) == 1
 
 	def movePlayer(self, currState, playerId, newPosition):
 		positionList = list(currState.position)
@@ -227,6 +169,7 @@ class Game:
 			propertyName = self.board.getPropertyName(idx)
 			logger.info("Property %s: %d", propertyName, currState.propertyStatus[idx])
 
+	# Identify and Execute proper handler associated to cell class
 	def handleBoardCell(self, currState, players, turnPlayerId):
 		playerPosition = currState.position[turnPlayerId]
 		boardCellClass = self.board.getPropertyClass(playerPosition)
@@ -262,12 +205,67 @@ class Game:
 			self.buyProperty(currState, turnPlayerId, position)
 		elif not (turnPlayerId == owner):
 			# Pay Rent
-			rent = self.board.getPropertyRent(position)
+			rent = self.board.getPropertyRent(position)[0]
 
 			currState.updateCashHolding(owner, rent)
 			currState.updateCashHolding(turnPlayerId, -1 * rent)
 
-			logger.info("Player %d paid %d rent", players[turnPlayerId].id, rent)
+			logger.info("Player %d paid %d rent to Player %d", \
+				players[turnPlayerId].id, players[owner].id, rent)
+
+	def handleCellRailRoad(self, currState, players, turnPlayerId):
+		self.handleCellStreet(currState, players, turnPlayerId)
+
+	def handleCellUtility(self, currState, players, turnPlayerId):
+		self.handleCellStreet(currState, players, turnPlayerId)
+
+	def handleChanceCard(self, currState, players, playerId):
+		#TODO fill all positions.
+		
+		cardId = self.chanceCardsNumbers.pop(0)
+		self.chanceCardsNumbers.append(cardId)
+		card = self.board.getChanceCard(cardId)
+		logger.info("Running Chance card")
+
+		positionList = list(currState.position)
+		currPosition = positionList[playerId]
+		
+		if card["type"] == constant.SETTLE_AMOUNT_WITH_BANK:
+			self.handleCollectMoneyFromBank(currState, playerId,int(card["money"]))
+		elif card["type"] == constant.GET_OUT_OF_JAIL:
+			self.handleGetOutOfJail(currState, self.players, playerId)
+		elif cardId == 0:
+			#Move to Go
+			currPosition = constant.GO_CELL
+			self.handleCollectMoneyFromBank(currState, playerId, 200)
+		
+		elif cardId == 8:
+			#Only 1 case for -3 moves. Never makes position -ve.
+			currPosition = currPosition - 3
+		else:
+			logger.info("Chance card not modelled for this position")
+
+		#TODO model all cards
+		self.movePlayer(currState, playerId, currPosition)
+
+
+	def handleCommunityCard(self, currState, players, playerId):
+		cardId = self.communityCardsNumbers.pop(0)
+		card = self.board.getChanceCard(cardId)
+		self.communityCardsNumbers.append(cardId)
+		logger.info("Running Community Card: %d", cardId)
+
+		positionList = list(currState.position)
+		currPosition = positionList[playerId]
+
+		if card["type"] == constant.SETTLE_AMOUNT_WITH_BANK:
+			self.handleCollectMoneyFromBank(currState, playerId,int(card["money"]))
+		elif card["type"] == constant.GET_OUT_OF_JAIL:
+			self.handleGetOutOfJail(currState, players, playerId)
+		else:
+			logger.info("Community Chest card not modelled for this position")
+		#TODO model all cards
+		self.movePlayer(currState, playerId, currPosition)
 		
 	def buyProperty(self, currState, playerId, propertyPosition):
 		price = self.board.getPropertyPrice(propertyPosition)
