@@ -2,21 +2,23 @@
 import Constant as constant
 from logger import logger
 import json
+import numpy as np
 
 class Board:
 		
 	def __init__(self):
-		self.boardConfig = self.initializeBoardConfig()
+		self.boardConfig = self.readConfig(constant.BOARD_CONFIG_FILE)
+		self.chanceCards = self.readConfig(constant.CHANCE_CARD_FILE_NAME)
+		self.communityCards = self.readConfig(constant.COMMUNITY_CARDS_FILE_NAME)
 
 		# Excluding JAIL index
 		self.totalBoardCells = len(self.boardConfig) - 1
 
 		logger.info('Board initialized')
 
-	def initializeBoardConfig(self):
-		with open('BoardConfig.json', 'r') as f:
+	def readConfig(self, fileName):
+		with open(fileName, 'r') as f:
 			config = json.load(f)
-		# print(config)
 		return config
 
 	def isPropertyBuyable(self, idx):
@@ -42,3 +44,9 @@ class Board:
 
 	def getPropertyPrice(self, idx):
 		return self.boardConfig[str(idx)]["price"]
+
+	def getCommunityCard(self, idx):
+		return self.communityCards[idx]
+	
+	def getChanceCard(self, idx):
+		return self.chanceCards[idx]
