@@ -9,20 +9,10 @@ import numpy as np
 import json
 
 class Game:
-	def __init__(self, \
-		players, \
-		fixedDiceRolls = None, \
-		fixedChanceCards = None, \
-		fixedCommunityChestCards = None):
-
-		self.fixedDiceRolls = fixedDiceRolls
-		self.chanceCardsNumbers = fixedChanceCards
-		self.communityCardsNumbers = fixedCommunityChestCards
+	def __init__(self):
 
 		# Board initialization
 		self.board = Board()
-
-		self.players = players
 		
 		# Initialize Cards
 		self.initCards()
@@ -38,14 +28,12 @@ class Game:
 
 	def initCards(self):
 		# Chance cards
-		if self.chanceCardsNumbers == None:
-			self.chanceCardsNumbers = [i for i in range(0, 16)]
-			np.random.shuffle(self.chanceCardsNumbers)
+		self.chanceCardsNumbers = [i for i in range(0, 16)]
+		np.random.shuffle(self.chanceCardsNumbers)
 		
 		# Community Chest cards
-		if self.communityCardsNumbers == None:
-			self.communityCardsNumbers = [i for i in range(0, 16)]
-			np.random.shuffle(self.communityCardsNumbers)
+		self.communityCardsNumbers = [i for i in range(0, 16)]
+		np.random.shuffle(self.communityCardsNumbers)
 
 	def initDice(self):
 		self.dices = []
@@ -76,10 +64,26 @@ class Game:
 		self.boardCellHandlers["Chance"] = self.handleChanceCard
 		self.boardCellHandlers["Chest"] = self.handleCommunityCard
 
-	def run(self):
+	def run(self, \
+			players, \
+			fixedDiceRolls = None, \
+			fixedChanceCards = None, \
+			fixedCommunityChestCards = None):
+		self.players = players
+		self.fixedDiceRolls = fixedDiceRolls
+		
+		if not fixedChanceCards == None:
+			self.chanceCardsNumbers = fixedChanceCards
+		
+		if not fixedCommunityChestCards == None:
+			self.communityCardsNumbers = fixedCommunityChestCards
+
 		logger.info("Game started!")
 
 		for moveCount in range(constant.MAX_MOVES):
+			if (not self.fixedDiceRolls == None) and len(self.fixedDiceRolls) == 0:
+				break
+
 			logger.info("--------------Move: %d-------------", moveCount + 1)
 
 			# Execute BSMT for all players
@@ -109,6 +113,9 @@ class Game:
 		
 		logger.info("\nGame End\n")
 		self.displayState(self.currState, self.players)
+		winners = self.calculateWinner(self.currState, self.players)
+
+		return winners, self.currState
 
 	# Using players as an argument to extend it to multiple players as well.
 	def broadcastState(self, currState, players):
@@ -183,7 +190,6 @@ class Game:
 			logger.info("Property %s: %d", propertyName, currState.propertyStatus[idx])
 
 		logger.info("Total Money in the bank: %d", currState.bankMoney)
-		self.calculateWinner(currState, players)
 
 	def calculateWinner(self, currState, players):
 		wealthList = []
@@ -205,6 +211,8 @@ class Game:
 			logger.info("Match tied between players: %s", str(winners))
 		else:
 			logger.info("Winner is: %d", winners[0])
+
+		return winners
 
 	# Identify and Execute proper handler associated to cell class
 	def handleBoardCell(self, currState, players, turnPlayerId):

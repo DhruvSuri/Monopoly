@@ -5,8 +5,8 @@ import json
 
 def main():
 	print ('Playing Monopoly!')
-	game = Game([Player(1), Player(2)])
-	game.run()
+	game = Game()
+	game.run([Player(1), Player(2)])
 
 if __name__ == '__main__':
 	main()
