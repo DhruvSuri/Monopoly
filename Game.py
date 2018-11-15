@@ -93,7 +93,7 @@ class Game:
 			# Broadcast state to all the players
 			self.broadcastState(self.currState, self.players)
 
-			# Maintaining state histor
+			# Maintaining state history
 			self.stateHist.append(deepcopy(self.currState))
 		
 		logger.info("\nGame End\n")
@@ -215,6 +215,7 @@ class Game:
 		
 		playerPosition = currState.position[turnPlayerId]
 		tax = self.board.getPropertyTax(playerPosition)
+		currState.bankMoney = currState.bankMoney + tax
 		currState.updateCashHolding(turnPlayerId, -1 * tax)
 	
 	def handleCellStreet(self, currState, players, turnPlayerId):
