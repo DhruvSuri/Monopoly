@@ -225,7 +225,8 @@ class Game:
 			self.buyProperty(currState, turnPlayerId, position)
 		elif not (turnPlayerId == owner):
 			# Pay Rent
-			rent = self.board.getPropertyRent(position)[0]
+			propertyStatus = np.abs(currState.getPropertyStatus(position))
+			rent = self.board.getPropertyRent(position)[propertyStatus - 1]
 
 			currState.updateCashHolding(owner, rent)
 			currState.updateCashHolding(turnPlayerId, -1 * rent)
