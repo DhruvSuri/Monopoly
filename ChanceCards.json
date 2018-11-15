@@ -74,8 +74,7 @@
     "content": "Make general repairs on all your property: For each house pay $25, For each hotel {pay} $100.",
     "type": 5,
     "position": 0,
-    "money": -25,
-    "money2": -100
+    "money": -25
   },
   {
     "id": 11,

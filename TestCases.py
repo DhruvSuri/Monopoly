@@ -78,7 +78,6 @@ tests = [
 ]
 
 def runTests():
-    allPassed = True
     failedTests = []
     for test in tests:
         adjudicator = Game()
