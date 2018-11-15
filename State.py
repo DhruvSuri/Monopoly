@@ -77,7 +77,7 @@ class State:
             and self.propertyStatus[position] > -5 and self.propertyStatus[position] < 5):
             #Houses can be built from -5 to 5
             return True
-        logger.debug('All house conditions not satisfied')
+        
         return False
 
     def getPropertyOwner(self, position):
@@ -90,14 +90,14 @@ class State:
         else:
             return -1
 
-    def getPlayerSymbolForProperty(self, playerId):
+    def getPropertyStatus(self, position):
+        return self.propertyStatus[position]
+
+    def updatePropertyStatus(self, position, playerId):
         sign = 1
         if playerId == 1:
             sign = -1
         return sign
-
-    def updatePropertyStatus(self, position, playerId):
-        self.propertyStatus[position] = self.getPlayerSymbolForProperty(playerId)
 
     def updateCashHolding(self, playerId, cashToAdd):
         newCashHolding = list(self.cashHoldings)

@@ -2,21 +2,23 @@
 import Constant as constant
 from logger import logger
 import json
+import numpy as np
 
 class Board:
 		
 	def __init__(self):
-		self.boardConfig = self.initializeBoardConfig()
+		self.boardConfig = self.readConfig(constant.BOARD_CONFIG_FILE)
+		self.chanceCards = self.readConfig(constant.CHANCE_CARD_FILE_NAME)
+		self.communityCards = self.readConfig(constant.COMMUNITY_CARDS_FILE_NAME)
 
 		# Excluding JAIL index
 		self.totalBoardCells = len(self.boardConfig) - 1
 
 		logger.info('Board initialized')
 
-	def initializeBoardConfig(self):
-		with open('BoardConfig.json', 'r') as f:
+	def readConfig(self, fileName):
+		with open(fileName, 'r') as f:
 			config = json.load(f)
-		# print(config)
 		return config
 
 	def isPropertyBuyable(self, idx):
@@ -41,10 +43,20 @@ class Board:
 		return self.boardConfig[str(idx)]["rent"]
 
 	def getPropertyPrice(self, idx):
-		return self.boardConfig[str(idx)]["price"]
+		if "price" in self.boardConfig[str(idx)]:
+			return self.boardConfig[str(idx)]["price"]
+		return 0
 
-	def getHousePrice(self, idx):
-		return self.boardConfig[str(idx)]["build_cost"]
+	def getPropertyBuildCost(self, idx):
+		if "build_cost" in self.boardConfig[str(idx)]:
+			return self.boardConfig[str(idx)]["build_cost"]
+		return 0
+
+	def getCommunityCard(self, idx):
+		return self.communityCards[idx]
+	
+	def getChanceCard(self, idx):
+		return self.chanceCards[idx]
 
 	def getMonopolyGroup(self, idx):
 		colorGroupName = self.boardConfig[str(idx)]["monopoly"]
@@ -57,4 +69,3 @@ class Board:
 				monopolyList.append(i)
 
 		return monopolyList
-

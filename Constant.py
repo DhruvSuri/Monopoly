@@ -5,7 +5,7 @@ MAX_MOVES = 100
 BANK_MONEY = 5000
 
 # Board Configuration
-BOARD_SIZE = 40
+BOARD_CONFIG_FILE = 'BoardConfig.json'
 IN_JAIL_INDEX = -1
 GO_TO_JAIL_CELL = 30
 GO_CELL = 0
