@@ -9,7 +9,16 @@ import numpy as np
 import json
 
 class Game:
-	def __init__(self, players):
+	def __init__(self, \
+		players, \
+		fixedDiceRolls = None, \
+		fixedChanceCards = None, \
+		fixedCommunityChestCards = None):
+
+		self.fixedDiceRolls = fixedDiceRolls
+		self.chanceCardsNumbers = fixedChanceCards
+		self.communityCardsNumbers = fixedCommunityChestCards
+
 		# Board initialization
 		self.board = Board()
 
@@ -29,12 +38,14 @@ class Game:
 
 	def initCards(self):
 		# Chance cards
-		self.chanceCardsNumbers = [i for i in range(0, 16)]
-		np.random.shuffle(self.chanceCardsNumbers)
+		if self.chanceCardsNumbers == None:
+			self.chanceCardsNumbers = [i for i in range(0, 16)]
+			np.random.shuffle(self.chanceCardsNumbers)
 		
 		# Community Chest cards
-		self.communityCardsNumbers = [i for i in range(0, 16)]
-		np.random.shuffle(self.communityCardsNumbers)
+		if self.communityCardsNumbers == None:
+			self.communityCardsNumbers = [i for i in range(0, 16)]
+			np.random.shuffle(self.communityCardsNumbers)
 
 	def initDice(self):
 		self.dices = []
@@ -116,17 +127,20 @@ class Game:
 
 	def handleDiceRolls(self, currState, players, turnPlayerId):
 		rollsHist = []
-		for _ in range(constant.MAX_ROLLS_FOR_JAIL):
+		if not self.fixedDiceRolls == None:
+			rollsHist = self.fixedDiceRolls.pop(0)
+		else:
+			for _ in range(constant.MAX_ROLLS_FOR_JAIL):
 			
-			rolls = []
-			for dice in self.dices:
-				rolls.append(dice.roll())
+				rolls = []
+				for dice in self.dices:
+					rolls.append(dice.roll())
 			
-			rollsHist.append(tuple(rolls))
+				rollsHist.append(tuple(rolls))
 						
-			uniqueRolls = np.unique(rolls)
-			if currState.isPlayerInJail(turnPlayerId) or len(uniqueRolls) != 1:
-				break
+				uniqueRolls = np.unique(rolls)
+				if currState.isPlayerInJail(turnPlayerId) or len(uniqueRolls) != 1:
+					break
 
 		# Update current state with the dice roll
 		self.currState.diceRoll = rollsHist

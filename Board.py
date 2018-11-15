@@ -64,8 +64,8 @@ class Board:
 		if colorGroupName == "None":
 			return monopolyList
 
-		for i in range(constant.BOARD_SIZE):
-			if self.boardConfig[str(i)]["colorGroup"] == colorGroupName:
-				monopolyList.append(i)
+		for idx in self.boardConfig:
+			if self.boardConfig[idx]["colorGroup"] == colorGroupName:
+				monopolyList.append(int(idx))
 
 		return monopolyList

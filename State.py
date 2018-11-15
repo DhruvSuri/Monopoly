@@ -98,7 +98,7 @@ class State:
         sign = 1
         if playerId == 1:
             sign = -1
-        return sign
+        self.propertyStatus[position] = sign
 
     def updateCashHolding(self, playerId, cashToAdd):
         newCashHolding = list(self.cashHoldings)
