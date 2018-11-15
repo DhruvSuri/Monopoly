@@ -59,13 +59,13 @@ class Board:
 		return self.chanceCards[idx]
 
 	def getMonopolyGroup(self, idx):
-		colorGroupName = self.boardConfig[str(idx)]["monopoly"]
+		colorGroupName = self.boardConfig[str(idx)]["colorGroup"]
 		monopolyList = []
 		if colorGroupName == "None":
 			return monopolyList
 
 		for i in range(constant.BOARD_SIZE):
-			if self.boardConfig[str(i)]["monopoly"] == colorGroupName:
+			if self.boardConfig[str(i)]["colorGroup"] == colorGroupName:
 				monopolyList.append(i)
 
 		return monopolyList

@@ -72,6 +72,7 @@ class State:
             self.propertyStatus[position] = status+1
 
     def allHouseConditionsSatisfied(self, playerId, position, monopolyGroup):
+        logger.debug('Checking for House Conditions')
         if (self.allHousesEvenlyDistributed(playerId, position, monopolyGroup) \
             and self.allPropertiesOfMonopolyOwned(playerId, position, monopolyGroup) \
             and self.propertyStatus[position] > -5 and self.propertyStatus[position] < 5):
