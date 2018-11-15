@@ -25,8 +25,6 @@ class TestAgent:
 		return True
 
 	def jailDecision(self, state):
-		# ToDo: Different actions needs to be modelled R, P or C
-		# Currently in greedy approach modelling as P
 		return ("P")
 
 def testJailOnDoubles(adjudicator):
@@ -58,6 +56,15 @@ def testPayTaxes(adjudicator):
     return currState.position == (4, 0) \
         and currState.cashHoldings == (1300, 1500)
 
+def testPayRentIfNotOwned(adjudicator):
+    diceRolls = [[(1, 2)], [(2, 1)]]
+    
+    _, currState = adjudicator.run([TestAgent(1), TestAgent(2)], diceRolls)
+
+    return currState.position == (3, 3) \
+        and currState.cashHoldings == (1444, 1496) \
+        and currState.propertyStatus[3] == 1
+
 tests = [
     testJailOnDoubles,
     testJailOnGoToJailCell,
@@ -66,18 +73,21 @@ tests = [
     # testGetOutOfJailUsingCommunityCard
     # testHouseGettingBuilt
     # testBuyPropertyIfEmpty
-    # testPayRentIfNotOwned
+    testPayRentIfNotOwned,
     testPayTaxes
 ]
 
 def runTests():
     allPassed = True
+    failedTests = []
     for test in tests:
         adjudicator = Game()
         result = test(adjudicator)
         if not result:
-            print(test.__name__ + " failed!")
-            allPassed = False
-    if allPassed: print("All tests passed!")
+            failedTests.append(test.__name__)
+    if len(failedTests) == 0: 
+        print("All tests passed!")
+    else:
+        print("Following tests failed" + str(failedTests))
 
 runTests()
