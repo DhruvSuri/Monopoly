@@ -159,15 +159,35 @@ class Game:
 		 
 		currState.position = tuple(positionList)
 
-	def displayState(self, currState, players):		
-		for idx, cashHolding in enumerate(currState.cashHoldings):
-			logger.info("Player %d cash holdings: %d", players[idx].id, cashHolding)
-		logger.info("Total Money in the bank: %d", currState.bankMoney)
-
+	def displayState(self, currState, players):
 		logger.info("Final Property Status:")
 		for idx in range(1, len(currState.propertyStatus) - 2):
 			propertyName = self.board.getPropertyName(idx)
 			logger.info("Property %s: %d", propertyName, currState.propertyStatus[idx])
+
+		logger.info("Total Money in the bank: %d", currState.bankMoney)
+		self.calculateWinner(currState, players)
+
+	def calculateWinner(self, currState, players):
+		wealthList = []
+		for i, player in enumerate(players):
+			wealth = currState.cashHoldings[i]
+
+			for j in range(1, len(currState.propertyStatus) - 2):
+				if i == currState.getPropertyOwner(j):
+					wealth = wealth \
+						+ (np.abs(currState.getPropertyStatus(j)) - 1) * self.board.getPropertyBuildCost(j) \
+						+ self.board.getPropertyPrice(j)
+			wealthList.append(wealth)
+
+			logger.info("Player %d total wealth: %d", player.id, wealth)
+
+		winners = [players[i].id for i, x in enumerate(wealthList) if x == np.max(wealthList)]
+
+		if len(winners) > 1:
+			logger.info("Match tied between players: %s", str(winners))
+		else:
+			logger.info("Winner is: %d", winners[0])
 
 	# Identify and Execute proper handler associated to cell class
 	def handleBoardCell(self, currState, players, turnPlayerId):

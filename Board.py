@@ -43,7 +43,14 @@ class Board:
 		return self.boardConfig[str(idx)]["rent"]
 
 	def getPropertyPrice(self, idx):
-		return self.boardConfig[str(idx)]["price"]
+		if "price" in self.boardConfig[str(idx)]:
+			return self.boardConfig[str(idx)]["price"]
+		return 0
+
+	def getPropertyBuildCost(self, idx):
+		if "build_cost" in self.boardConfig[str(idx)]:
+			return self.boardConfig[str(idx)]["build_cost"]
+		return 0
 
 	def getCommunityCard(self, idx):
 		return self.communityCards[idx]

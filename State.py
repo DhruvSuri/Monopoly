@@ -45,6 +45,9 @@ class State:
         else:
             return 1
 
+    def getPropertyStatus(self, position):
+        return self.propertyStatus[position]
+
     def updatePropertyStatus(self, position, playerId):
         sign = 1
         if playerId == 1:
