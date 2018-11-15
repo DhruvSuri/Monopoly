@@ -31,27 +31,49 @@ class TestAgent:
 
 def testJailOnDoubles(adjudicator):
     diceRolls = [[(1,4)], [(5, 5), (4, 4), (3, 3)]]
-    
+
     _, currState = adjudicator.run([TestAgent(1), TestAgent(2)], diceRolls)
 
     return currState.position == (5, -1)
 
+def testJailOnGoToJailCell(adjudicator):
+    diceRolls = [[(1,4)], [(2, 5)], [(5, 5), (6, 6), (1, 2)]]
+    
+    _, currState = adjudicator.run([TestAgent(1), TestAgent(2)], diceRolls)
+
+    return currState.position == (-1, 7)
+
+def testGetOutOfJailUsingDoubles(adjudicator):
+    diceRolls = [[(5, 5), (4, 4), (3, 3)], [(1, 4)], [(2, 2)]]
+    
+    _, currState = adjudicator.run([TestAgent(1), TestAgent(2)], diceRolls)
+
+    return currState.position == (4, 5)
+
+def testPayTaxes(adjudicator):
+    diceRolls = [[(1, 3)]]
+    
+    _, currState = adjudicator.run([TestAgent(1), TestAgent(2)], diceRolls)
+
+    return currState.position == (4, 0) \
+        and currState.cashHoldings == (1300, 1500)
+
 tests = [
-    testJailOnDoubles
-    # testJailOnGoToJailCell
-    # testGetOutOfJailUsingDoubles
+    testJailOnDoubles,
+    testJailOnGoToJailCell,
+    testGetOutOfJailUsingDoubles,
     # testGetOutOfJailUsingChanceCard
     # testGetOutOfJailUsingCommunityCard
     # testHouseGettingBuilt
     # testBuyPropertyIfEmpty
     # testPayRentIfNotOwned
-    # testPayTaxes
+    testPayTaxes
 ]
 
 def runTests():
     allPassed = True
-    adjudicator = Game()
     for test in tests:
+        adjudicator = Game()
         result = test(adjudicator)
         if not result:
             print(test.__name__ + " failed!")
