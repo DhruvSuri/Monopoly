@@ -328,7 +328,7 @@ class Game:
 			currState.bankMoney = currState.bankMoney + price
 
 			logger.info("Property %s purchased by Player: %d. Player cash holding: %d", \
-				self.board.getPropertyName(propertyPosition), playerId, currState.cashHoldings[playerId])
+				self.board.getPropertyName(propertyPosition), playerId+1, currState.cashHoldings[playerId])
 
 	def buyHouse(self, currState, playerId, position):
 		monopolyGroup = self.board.getMonopolyGroup(position)

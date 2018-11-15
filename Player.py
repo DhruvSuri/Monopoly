@@ -12,7 +12,7 @@ class Player:
 		return None
 
 	def respondTrade(self, state):
-		return None
+		return False
 	
 	def buyProperty(self, state):
 		return True

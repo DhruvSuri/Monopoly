@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 from Game import Game
+from logger import logger
 
 class TestAgent:
 	def __init__(self, id):
@@ -58,22 +59,29 @@ def testPayTaxes(adjudicator):
     return currState.position == (4, 0) \
         and currState.cashHoldings == (1300, 1500)
 
+def testHouseGettingBuilt(adjudicator):
+	logger.debug('Testing House getting built for Property Marvin Gardens')
+	diceRolls = [[(6,6), (6,5), (1,2)], [(1,2)], [(1,2)], [(2,4)], [(6,5)], [(1,3)] ,[(6,6), (6,6), (1,2)], [(1,3)], [(1,1)]]
+	_, currState = adjudicator.run([TestAgent(1), TestAgent(2)], diceRolls)
+	return currState.propertyStatus[29] == 2
+
 tests = [
     testJailOnDoubles,
     testJailOnGoToJailCell,
     testGetOutOfJailUsingDoubles,
     # testGetOutOfJailUsingChanceCard
     # testGetOutOfJailUsingCommunityCard
-    # testHouseGettingBuilt
+    testHouseGettingBuilt
     # testBuyPropertyIfEmpty
     # testPayRentIfNotOwned
-    testPayTaxes
+    # testPayTaxes
 ]
 
 def runTests():
     allPassed = True
     for test in tests:
         adjudicator = Game()
+        logger.debug('\n\n\nSTARTING NEW TEST CASE: %s\n', test.__name__)
         result = test(adjudicator)
         if not result:
             print(test.__name__ + " failed!")
