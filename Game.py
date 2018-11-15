@@ -68,12 +68,15 @@ class Game:
 			players, \
 			fixedDiceRolls = None, \
 			fixedChanceCards = None, \
-			fixedCommunityChestCards = None):
+			fixedCommunityChestCards = None, \
+			displayState = True):
+		
 		self.players = players
 		self.fixedDiceRolls = fixedDiceRolls
 		
 		if not fixedChanceCards == None:
 			self.chanceCardsNumbers = fixedChanceCards
+			logger.info(self.chanceCardsNumbers)
 		
 		if not fixedCommunityChestCards == None:
 			self.communityCardsNumbers = fixedCommunityChestCards
@@ -112,7 +115,8 @@ class Game:
 			self.stateHist.append(deepcopy(self.currState))
 		
 		logger.info("\nGame End\n")
-		self.displayState(self.currState, self.players)
+		if displayState:
+			self.displayState(self.currState, self.players)
 		winners = self.calculateWinner(self.currState, self.players)
 
 		return winners, self.currState
@@ -301,7 +305,7 @@ class Game:
 
 	def handleCommunityCard(self, currState, players, playerId):
 		cardId = self.communityCardsNumbers.pop(0)
-		card = self.board.getChanceCard(cardId)
+		card = self.board.getCommunityCard(cardId)
 		self.communityCardsNumbers.append(cardId)
 		logger.info("Running Community Card: %d", cardId)
 
