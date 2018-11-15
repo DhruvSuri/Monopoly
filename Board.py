@@ -42,3 +42,19 @@ class Board:
 
 	def getPropertyPrice(self, idx):
 		return self.boardConfig[str(idx)]["price"]
+
+	def getHousePrice(self, idx):
+		return self.boardConfig[str(idx)]["build_cost"]
+
+	def getMonopolyGroup(self, idx):
+		colorGroupName = self.boardConfig[str(idx)]["monopoly"]
+		monopolyList = []
+		if colorGroupName == "None":
+			return monopolyList
+
+		for i in range(constant.BOARD_SIZE):
+			if self.boardConfig[str(i)]["monopoly"] == colorGroupName:
+				monopolyList.append(i)
+
+		return monopolyList
+

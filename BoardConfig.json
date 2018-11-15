@@ -40,7 +40,7 @@
 "rent_house_3":90,
 "rent_house_4":160,
 "rent_hotel":250,
-"monopoly_group_elements":[3]
+"color_group_elements":[3]
 },
 "2":{
 "class":"Chest",
@@ -69,7 +69,7 @@
 "rent_house_3":180,
 "rent_house_4":320,
 "rent_hotel":450,
-"monopoly_group_elements":[1]
+"color_group_elements":[1]
 },
 "4":{
 "class":"Tax",
@@ -99,7 +99,7 @@
 "rent_house_3":0,
 "rent_house_4":0,
 "rent_hotel":0,
-"monopoly_group_elements":[15, 25, 35]
+"color_group_elements":[15, 25, 35]
 },
 "6":{
 "class":"Street",
@@ -114,7 +114,7 @@
 "rent_house_3":270,
 "rent_house_4":400,
 "rent_hotel":550,
-"monopoly_group_elements":[8, 9]
+"color_group_elements":[8, 9]
 },
 "7":{
 "class":"Chance",
@@ -143,7 +143,7 @@
 "rent_house_3":270,
 "rent_house_4":400,
 "rent_hotel":550,
-"monopoly_group_elements":[6, 9]
+"color_group_elements":[6, 9]
 },
 "9":{
 "class":"Street",
@@ -158,7 +158,7 @@
 "rent_house_3":300,
 "rent_house_4":450,
 "rent_hotel":600,
-"monopoly_group_elements":[6, 8]
+"color_group_elements":[6, 8]
 },
 "10":{
 "class":"Idle",
@@ -187,7 +187,7 @@
 "rent_house_3":450,
 "rent_house_4":625,
 "rent_hotel":750,
-"monopoly_group_elements":[13, 14]
+"color_group_elements":[13, 14]
 },
 "12":{
 "class":"Utility",
@@ -202,7 +202,7 @@
 "rent_house_3":0,
 "rent_house_4":0,
 "rent_hotel":0,
-"monopoly_group_elements":[28]
+"color_group_elements":[28]
 },
 "13":{
 "class":"Street",
@@ -217,7 +217,7 @@
 "rent_house_3":450,
 "rent_house_4":625,
 "rent_hotel":750,
-"monopoly_group_elements":[11, 14]
+"color_group_elements":[11, 14]
 },
 "14":{
 "class":"Street",
@@ -232,7 +232,7 @@
 "rent_house_3":500,
 "rent_house_4":700,
 "rent_hotel":900,
-"monopoly_group_elements":[11, 13]
+"color_group_elements":[11, 13]
 },
 "15":{
 "class":"Railroad",
@@ -247,7 +247,7 @@
 "rent_house_3":0,
 "rent_house_4":0,
 "rent_hotel":0,
-"monopoly_group_elements":[5, 25, 35]
+"color_group_elements":[5, 25, 35]
 },
 "16":{
 "class":"Street",
@@ -262,7 +262,7 @@
 "rent_house_3":550,
 "rent_house_4":750,
 "rent_hotel":950,
-"monopoly_group_elements":[18, 19]
+"color_group_elements":[18, 19]
 },
 "17":{
 "class":"Chest",
@@ -291,7 +291,7 @@
 "rent_house_3":550,
 "rent_house_4":750,
 "rent_hotel":950,
-"monopoly_group_elements":[16, 19]
+"color_group_elements":[16, 19]
 },
 "19":{
 "class":"Street",
@@ -306,7 +306,7 @@
 "rent_house_3":600,
 "rent_house_4":800,
 "rent_hotel":1000,
-"monopoly_group_elements":[16, 18]
+"color_group_elements":[16, 18]
 },
 "20":{
 "class":"Idle",
@@ -335,7 +335,7 @@
 "rent_house_3":700,
 "rent_house_4":875,
 "rent_hotel":1050,
-"monopoly_group_elements":[23, 24]
+"color_group_elements":[23, 24]
 },
 "22":{
 "class":"Chance",
@@ -364,7 +364,7 @@
 "rent_house_3":700,
 "rent_house_4":875,
 "rent_hotel":1050,
-"monopoly_group_elements":[21, 24]
+"color_group_elements":[21, 24]
 },
 "24":{
 "class":"Street",
@@ -379,7 +379,7 @@
 "rent_house_3":750,
 "rent_house_4":925,
 "rent_hotel":1100,
-"monopoly_group_elements":[21, 23]
+"color_group_elements":[21, 23]
 },
 "25":{
 "class":"Railroad",
@@ -394,7 +394,7 @@
 "rent_house_3":0,
 "rent_house_4":0,
 "rent_hotel":0,
-"monopoly_group_elements":[5, 15, 35]
+"color_group_elements":[5, 15, 35]
 },
 "26":{
 "class":"Street",
@@ -409,7 +409,7 @@
 "rent_house_3":800,
 "rent_house_4":975,
 "rent_hotel":1150,
-"monopoly_group_elements":[27, 29]
+"color_group_elements":[27, 29]
 },
 "27":{
 "class":"Street",
@@ -424,7 +424,7 @@
 "rent_house_3":800,
 "rent_house_4":975,
 "rent_hotel":1150,
-"monopoly_group_elements":[26, 29]
+"color_group_elements":[26, 29]
 },
 "28":{
 "class":"Utility",
@@ -439,7 +439,7 @@
 "rent_house_3":0,
 "rent_house_4":0,
 "rent_hotel":0,
-"monopoly_group_elements":[12]
+"color_group_elements":[12]
 },
 "29":{
 "class":"Street",
@@ -454,7 +454,7 @@
 "rent_house_3":850,
 "rent_house_4":1025,
 "rent_hotel":1200,
-"monopoly_group_elements":[26, 27]
+"color_group_elements":[26, 27]
 },
 "30":{
 "class":"GoToJail",
@@ -483,7 +483,7 @@
 "rent_house_3":900,
 "rent_house_4":1100,
 "rent_hotel":1275,
-"monopoly_group_elements":[32, 34]
+"color_group_elements":[32, 34]
 },
 "32":{
 "class":"Street",
@@ -498,7 +498,7 @@
 "rent_house_3":900,
 "rent_house_4":1100,
 "rent_hotel":1275,
-"monopoly_group_elements":[31, 34]
+"color_group_elements":[31, 34]
 },
 "33":{
 "class":"Chest",
@@ -527,7 +527,7 @@
 "rent_house_3":1000,
 "rent_house_4":1200,
 "rent_hotel":1400,
-"monopoly_group_elements":[31, 32]
+"color_group_elements":[31, 32]
 },
 "35":{
 "class":"Railroad",
@@ -542,7 +542,7 @@
 "rent_house_3":0,
 "rent_house_4":0,
 "rent_hotel":0,
-"monopoly_group_elements":[5, 15, 25]
+"color_group_elements":[5, 15, 25]
 },
 "36":{
 "class":"Chance",
@@ -571,7 +571,7 @@
 "rent_house_3":1100,
 "rent_house_4":1300,
 "rent_hotel":1500,
-"monopoly_group_elements":[39]
+"color_group_elements":[39]
 },
 "38":{
 "class":"Tax",
@@ -601,6 +601,6 @@
 "rent_house_3":1400,
 "rent_house_4":1700,
 "rent_hotel":2000,
-"monopoly_group_elements":[37]
+"color_group_elements":[37]
 }
 }

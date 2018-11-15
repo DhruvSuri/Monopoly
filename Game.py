@@ -268,6 +268,9 @@ class Game:
 			currState.updateCashHolding(turnPlayerId, -1 * rent)
 
 			logger.info("Player %d paid %d rent", players[turnPlayerId].id, rent)
+		else: 
+			#Greedy Buy house. Have to be moved to BSMT
+			self.buyHouse(currState, turnPlayerId, position)
 		
 	def buyProperty(self, currState, playerId, propertyPosition):
 		price = self.board.getPropertyPrice(propertyPosition)
@@ -281,6 +284,20 @@ class Game:
 
 			logger.info("Property %s purchased by Player: %d. Player cash holding: %d", \
 				self.board.getPropertyName(propertyPosition), playerId, currState.cashHoldings[playerId])
+
+	def buyHouse(self, currState, playerId, position):
+		monopolyGroup = self.board.getMonopolyGroup(position)
+		price = self.board.getHousePrice(position)
+
+		if (currState.cashHoldings[playerId] >= price \
+			and currState.allHouseConditionsSatisfied(playerId, position, monopolyGroup)):
+			#TODO Add BMST decision
+			
+			currState.updateHouseStatus(playerId, position)
+			currState.updateCashHolding(playerId, -1 * price)
+
+			logger.info("House built on property %s by Player: %d. Player cash holding: %d", \
+				self.board.getPropertyName(position), playerId, currState.cashHoldings[playerId])
 
 	def handleGetOutOfJail(self, currState, players, turnPlayerId):
 		if currState.position[turnPlayerId] == constant.IN_JAIL_INDEX:
