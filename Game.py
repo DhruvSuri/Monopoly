@@ -261,8 +261,8 @@ class Game:
 			currState.updateCashHolding(owner, rent)
 			currState.updateCashHolding(turnPlayerId, -1 * rent)
 
-			logger.info("Player %d paid %d rent to Player %d", \
-				players[turnPlayerId].id, players[owner].id, rent)
+			logger.info("Player %d paid USD %d rent to Player %d", \
+				players[turnPlayerId].id, rent, players[owner].id)
 		else: 
 			#Greedy Buy house. Have to be moved to BSMT
 			self.buyHouse(currState, turnPlayerId, position)
