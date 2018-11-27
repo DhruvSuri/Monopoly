@@ -26,14 +26,15 @@ class Game:
 		# Registering Board Cell Handlers
 		self.registerBoardCellHandlers()
 
+		# Registering Community Card Handlers
+		self.registerCommunityCardHandlers()
+
 	def initCards(self):
 		# Chance cards
 		self.chanceCardsNumbers = [i for i in range(0, 16)]
-		np.random.shuffle(self.chanceCardsNumbers)
 		
 		# Community Chest cards
 		self.communityCardsNumbers = [i for i in range(0, 16)]
-		np.random.shuffle(self.communityCardsNumbers)
 
 	def initDice(self):
 		self.dices = []
@@ -63,6 +64,14 @@ class Game:
 		self.boardCellHandlers["Utility"] = self.handleCellUtility
 		self.boardCellHandlers["Chance"] = self.handleChanceCard
 		self.boardCellHandlers["Chest"] = self.handleCommunityCard
+
+	def registerCommunityCardHandlers(self):
+		self.communityCardHandlers = dict()
+		self.communityCardHandlers["SETTLE_AMOUNT_WITH_BANK_CARD"] = self.handleSettleAmountWithBankCard
+		self.communityCardHandlers["GO_TO_GO_CARD"] = self.handleGoToGoCard
+		self.communityCardHandlers["GO_TO_JAIL_CARD"] = self.handleGoToJailCard
+		self.communityCardHandlers["SETTLE_MONEY_WITH_OTHER_PLAYERS_CARD"] = self.handleSettleMoneyWithOtherPlayersCard
+		self.communityCardHandlers["GET_OUT_OF_JAIL_CARD"] = self.handleGetOutOfJailCard
 
 	def run(self, \
 			players, \
@@ -285,13 +294,13 @@ class Game:
 		currPosition = positionList[playerId]
 		
 		if card["type"] == constant.SETTLE_AMOUNT_WITH_BANK:
-			self.handleCollectMoneyFromBank(currState, playerId,int(card["money"]))
+			self.handleSettleAmountWithBankCard(currState, players, playerId, card)
 		elif card["type"] == constant.GET_OUT_OF_JAIL:
-			self.handleGetOutOfJail(currState, self.players, playerId)
+			self.handleGetOutOfJailCard(currState, players, playerId, card)
 		elif cardId == 0:
 			#Move to Go
 			currPosition = constant.GO_CELL
-			self.handleCollectMoneyFromBank(currState, playerId, 200)
+			self.handleSettleAmountWithBankCard(currState, players, playerId, card)
 		
 		elif cardId == 8:
 			#Only 1 case for -3 moves. Never makes position -ve.
@@ -302,24 +311,20 @@ class Game:
 		#TODO model all cards
 		self.movePlayer(currState, playerId, currPosition)
 
-
 	def handleCommunityCard(self, currState, players, playerId):
+		# Taking the top card
 		cardId = self.communityCardsNumbers.pop(0)
 		card = self.board.getCommunityCard(cardId)
 		self.communityCardsNumbers.append(cardId)
-		logger.info("Running Community Card: %d", cardId)
+		
+		logger.info("Running Community Card: %s", card["content"])
 
-		positionList = list(currState.position)
-		currPosition = positionList[playerId]
-
-		if card["type"] == constant.SETTLE_AMOUNT_WITH_BANK:
-			self.handleCollectMoneyFromBank(currState, playerId,int(card["money"]))
-		elif card["type"] == constant.GET_OUT_OF_JAIL:
-			self.handleGetOutOfJail(currState, players, playerId)
+		#TODO model all cards
+		if card["type"] in self.communityCardHandlers:
+			handler = self.communityCardHandlers[card["type"]]
+			handler(currState, players, playerId, card)
 		else:
 			logger.info("Community Chest card not modelled for this position")
-		#TODO model all cards
-		self.movePlayer(currState, playerId, currPosition)
 		
 	def buyProperty(self, currState, playerId, propertyPosition):
 		price = self.board.getPropertyPrice(propertyPosition)
@@ -348,12 +353,27 @@ class Game:
 			logger.info("House built on property %s by Player: %d. Player cash holding: %d", \
 				self.board.getPropertyName(position), playerId, currState.cashHoldings[playerId])
 
-	def handleGetOutOfJail(self, currState, players, turnPlayerId):
-		if currState.position[turnPlayerId] == constant.IN_JAIL_INDEX:
+	def handleGetOutOfJailCard(self, currState, players, turnPlayerId, card):
+		if currState.isPlayerInJail(turnPlayerId):
 			self.movePlayer(currState, turnPlayerId, constant.GO_CELL)
 			logger.info("Player: %d moved out of jail", players[turnPlayerId].id)
 
-	def handleCollectMoneyFromBank(self, currState, playerId, amount):
-		cashHolding = list(currState.cashHoldings)
-		cashHolding[playerId] = currState.cashHoldings[playerId] + amount
-		currState.cashHoldings = tuple(cashHolding)
+	def handleSettleAmountWithBankCard(self, currState, players, turnPlayerId, card):
+		money = int(card["money"])
+		currState.updateCashHolding(turnPlayerId, money)
+		currState.bankMoney = currState.bankMoney - money
+
+	def handleGoToGoCard(self, currState, players, turnPlayerId, card):
+		self.movePlayer(currState, turnPlayerId, constant.GO_CELL)
+		self.handleSettleAmountWithBankCard(currState, players, turnPlayerId, card)
+
+	def handleGoToJailCard(self, currState, players, turnPlayerId, card):
+		self.movePlayer(currState, turnPlayerId, constant.IN_JAIL_INDEX)
+
+	def handleSettleMoneyWithOtherPlayersCard(self, currState, players, turnPlayerId, card):
+		money = int(card["money"])
+		for i in range(len(players)):
+			if i == turnPlayerId:
+				currState.updateCashHolding(i, (len(players) - 1) * money)
+			else:
+				currState.updateCashHolding(i, -1 * money)
