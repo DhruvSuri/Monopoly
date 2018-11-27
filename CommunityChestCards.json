@@ -44,7 +44,7 @@
   {
     "id": 6,
     "content": "Grand Opera Night. Collect $50 from every player for opening night seats.",
-    "type": 2,
+    "type": "SETTLE_MONEY_WITH_OTHER_PLAYERS_CARD",
     "position": 0,
     "money": 50
   },
