@@ -37,7 +37,7 @@
   {
     "id": 5,
     "content": "Go to jail, go directly to jail – Do not pass Go, do not collect $200",
-    "type": "GO_TO_JAIL_CARD",
+    "type": "GO_TO_CELL_CARD",
     "position": -1,
     "money": 0
   },

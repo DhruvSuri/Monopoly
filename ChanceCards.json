@@ -2,7 +2,7 @@
   {
     "id": 0,
     "content": "Advance to Go (Collect $200)",
-    "type": 3,
+    "type": "GO_TO_GO_CARD",
     "position": 1,
     "money": 200
   },
@@ -44,14 +44,14 @@
   {
     "id": 6,
     "content": "Bank pays you dividend of $50",
-    "type": "SETTLE_AMOUNT_WITH_BANK",
+    "type": "SETTLE_AMOUNT_WITH_BANK_CARD",
     "position": 0,
     "money": 50
   },
   {
     "id": 7,
     "content": "Get out of Jail free, this card may be kept until needed, or traded",
-    "type": "GET_OUT_OF_JAIL",
+    "type": "GET_OUT_OF_JAIL_CARD",
     "position": 0,
     "money": 0
   },
@@ -65,7 +65,7 @@
   {
     "id": 9,
     "content": "Go to Jail. Go directly to Jail. Do not pass GO, do not collect $200.",
-    "type": 3,
+    "type": "GO_TO_CELL_CARD",
     "position": -1,
     "money": 0
   },
@@ -79,35 +79,35 @@
   {
     "id": 11,
     "content": "Pay poor tax of $15",
-    "type": "SETTLE_AMOUNT_WITH_BANK",
+    "type": "SETTLE_AMOUNT_WITH_BANK_CARD",
     "position": 0,
     "money": -15
   },
   {
     "id": 12,
     "content": "Take a trip to Reading Railroad.",
-    "type": 3,
+    "type": "GO_TO_CELL_CARD",
     "position": 6,
     "money": 0
   },
   {
     "id": 13,
     "content": "Advance to Boardwalk",
-    "type": 3,
+    "type": "GO_TO_CELL_CARD",
     "position": 40,
     "money": 0
   },
   {
     "id": 14,
     "content": "You have been elected chairman of the board, pay each player $50",
-    "type": 2,
+    "type": "SETTLE_MONEY_WITH_OTHER_PLAYERS_CARD",
     "position": 0,
     "money": -50
   },
   {
     "id": 15,
     "content": "Your building loan matures, collect $150",
-    "type": "SETTLE_AMOUNT_WITH_BANK",
+    "type": "SETTLE_AMOUNT_WITH_BANK_CARD",
     "position": 0,
     "money": 150
   }
