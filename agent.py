@@ -12,6 +12,7 @@ import collections
     #10(Position on property group)
     #2 Finance
 
+
 class Agent:
     def __init__(self, id):
         self.id = id
@@ -23,7 +24,8 @@ class Agent:
         self.PHASE_PAYLOAD_INDEX = 5
 
     def getBSMTDecision(self, state):
-        self.transform_state(state)
+        playerId = 0
+        self.transform_state(state, playerId)
         return None
 
     def respondTrade(self, state):
@@ -72,15 +74,52 @@ class Agent:
     def run(self, state):
         return {}
 
-    def transform_state(self, state):
+    def checkSimilarity(self, firstState, secondState, playerId):
+        SIMILARITY_THRESHOLD = 0.1
+        obs1 = self.transform_state(firstState, playerId)
+        obs2 = self.transform_state(secondState, playerId)
+
+        #check Diff in Money
+        moneyDif = abs(obs1["propertyRatio"] - obs2["propertyRatio"]) + \
+                   abs(obs1["moneyRatio"] - obs2["moneyRatio"])
+
+        if moneyDif >= SIMILARITY_THRESHOLD:
+            return False
+
+        #Check diff in position
+        if obs1["position"] != obs2["position"]:
+            return False
+
+
+        #check Diff in Group
+        obs1Group = dict["firstPropPerc"]
+        obs2Group = dict["secPropPerc"]
+
+        diff = 0
+        for i in range[0, len(obs1Group)]:
+            diff += abs(obs1Group[i] - obs2Group[i])
+            if diff > SIMILARITY_THRESHOLD:
+                return False
+
+        return True
+
+    def transform_state(self, state, playerId):
         firstPropertyPercentage, secondPropertyPercentage = self.calculatePropertyGroupPercentage(state)
-        firstMoneyPercentage, secondMoneyPercentage = self.calculateFinancePercentage(state)
-        positionZero, positionOne = self.getNormalizedPosition(state)
-
-        print(firstPropertyPercentage, secondPropertyPercentage, firstMoneyPercentage, secondMoneyPercentage, positionZero, positionOne)
+        moneyRatio, propertyRatio = self.calculateFinancePercentage(state, playerId)
+        position = self.getNormalizedPosition(state, playerId)
 
 
-    def getNormalizedPosition(self, state):
+        #Temp code... Will be removed
+        dict = {}
+        dict["firstPropPerc"] = firstPropertyPercentage
+        dict["secPropPerc"] = secondPropertyPercentage
+        dict["moneyRatio"] = moneyRatio
+        dict["propertyRatio"] = propertyRatio
+        dict["position"] = position
+        print(dict)
+        return dict
+
+    def getNormalizedPosition(self, state, playerId):
         properyGroup = self.getPropertyGroups()
         propertyGroupToUnifMapping = {}
         start = 0.1
@@ -91,19 +130,39 @@ class Agent:
                 propertyGroupToUnifMapping[propertyid] = round(start,2)
             start += 0.1
 
-        positionZero = state[2][0]
-        positionOne = state[2][1]
-        return propertyGroupToUnifMapping.get(positionZero, None), propertyGroupToUnifMapping.get(positionOne, None)
+        position = state[self.PLAYER_POSITION_INDEX][playerId]
+        return propertyGroupToUnifMapping.get(position, None)
 
-    def calculateFinancePercentage(self, state):
-        moneyOwned = state[3]
-        #Assumption: Both player money != 0
+    def calculateFinancePercentage(self, state, playerId):
+        return self.calculateMoneyPercentage(state, playerId), self.calculatePropertiesPercentage(state, playerId)
 
-        return moneyOwned[0]/(moneyOwned[0] + moneyOwned[1]), moneyOwned[1]/(moneyOwned[0] + moneyOwned[1])
+    def calculateMoneyPercentage(self, state, playerId):
+        # Assumption: Both player money != 0
+        moneyOwned = state[self.PLAYER_CASH_INDEX][playerId]
+        opponentId = (playerId+1)%2
+        opponentMoney = state[self.PLAYER_CASH_INDEX][opponentId]
+        return moneyOwned/(moneyOwned + opponentMoney)
+
+    def calculatePropertiesPercentage(self, state, sign):
+        #sign = -1 or 1
+        propertyStatus = state[self.PROPERTY_STATUS_INDEX]
+        total = 0
+        owned = 0
+        for status in propertyStatus:
+            if status != 0:
+                total += 1
+                if sign == (status / abs(status)):
+                    owned += 1
+
+        if total == 0:
+            return 0
+        else:
+            return owned/total
+
 
     def calculatePropertyGroupPercentage(self, state):
         propertyGroups = self.getPropertyGroups()
-        propertyStatus = state[1]
+        propertyStatus = state[self.PROPERTY_STATUS_INDEX]
         propertyZeroPercentage = []
         propertyOnePercentage = []
 
@@ -142,11 +201,3 @@ class Agent:
             propertyGroup[value["monopoly"]] = group
         propertyGroup.pop('None', None)
         return propertyGroup
-
-
-
-
-
-
-
-
