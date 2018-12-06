@@ -1,6 +1,7 @@
 import constants
 import random
 import collections
+from network import Network
 
 
 # Actions:
@@ -23,10 +24,25 @@ class Agent:
         self.PLAYER_CASH_INDEX = 3
         self.PHASE_NUMBER_INDEX = 4
         self.PHASE_PAYLOAD_INDEX = 5
+        self.ACTION_TYPES = 3
+        self.ACTIONS = [-1,0,1] #-1 -> earn money by selling, 0->do nothing, 1->build, buy type action
+        self.ACTION_SELL = -1
+        self.ACTION_NOTHING = 0
+        self.ACTION_BUY = 1
+        self.QTable = {}
+        self.FIRST_PROP_RATIO = 'firstPropPerc'
+        self.SECOND_PROP_RATIO = 'secPropPerc'
+        self.MONEY_RATIO = 'moneyRatio'
+        self.PROP_RATIO = 'propertyRatio'
+        self.POSITION = 'position'
+        self.lastState = None
+        self.lastAction = None
+        self.INPUT_NODES = 24
+        self.network = Network()
 
     def getBSMTDecision(self, state):
-        # action = self.agent_step(state)
-        action = 1
+        action = self.agent_step(state)
+        #action = 1
         if action == 1:
             constructions = self.getMaxConstructions(state)
             if constructions != None:
@@ -35,7 +51,7 @@ class Agent:
                 return None
 
         elif action == -1:
-            print()
+            pass
             # self.getSellOrder(state)
         else:
             return None
@@ -56,10 +72,189 @@ class Agent:
     def receiveState(self, state):
         pass
 
-    def randomAction():
-        random.randint(0, 3)
+    def randomAction(self):
+        return random.choice(self.ACTIONS)
+
+####
+    def smooth (self, reward, factor):
+        return (reward/factor) / (1 + abs(reward/factor))
+
+    def calculateReward(self, state):
+        reward = 0
+
+        playerSign = 1
+        key = self.FIRST_PROP_RATIO
+
+        currentPlayerId = state[self.PLAYER_TURN_INDEX]%2
+
+        if currentPlayerId == 1: #player id
+            playerSign = -1
+            key = self.SECOND_PROP_RATIO
+
+        for property in state[self.PROPERTY_STATUS_INDEX]:
+            if playerSign * property > 0: #property owned by the player
+                if abs(property) != 7: #not mortgaged
+                    reward += abs(property)
+            else: #property owned by opponent (or not owned by anyone, then no effect on reward)
+                if abs(property) != 7:
+                    reward -= abs(property)
+
+        
+        transformed_state = self.transform_state(state)
+        for item in transformed_state[key]:
+            if item >= 0.9: #item == 1
+                reward += 1
+            elif item <= 0.1: #item == 0
+                reward -= 1
+        
+        alivePlayers = 2.0
+
+        assetFactor = state[self.PLAYER_CASH_INDEX][currentPlayerId]
+        totalAsset = state[self.PLAYER_CASH_INDEX][0] + state[self.PLAYER_CASH_INDEX][1]
+
+        assetFactor /= totalAsset
+        reward = self.smooth (reward, alivePlayers*5) #aliveplayers * 5
+        reward = reward + (1/alivePlayers) * assetFactor
+
+        #print ('player: ' + str(currentPlayerId) + ', reward: ' + str(reward))
+        return reward
+
+    def getQVal(self, input_state):
+        #getfromdict or getfromNN
+        return self.network.run(input_state)
+
+    def createInput(self, tstate, action = 0):
+        input_state = [0] * self.INPUT_NODES
+        input_state[0] = (action + 2.0) / 3.0 #normalizing action between 0 and 1
+
+        j = 1
+        for i in range(len(tstate[self.FIRST_PROP_RATIO])):
+            input_state[j] = tstate[self.FIRST_PROP_RATIO][i]
+            j += 1
+            input_state[j] = tstate[self.SECOND_PROP_RATIO][i]
+            j += 1
+        
+        input_state[j] = tstate[self.PROP_RATIO]
+        j += 1
+        input_state[j] = tstate[self.MONEY_RATIO]
+        j += 1
+        input_state[j] = tstate[self.POSITION]
+
+        input_state = self.network.getTensor(input_state)
+
+        return input_state
+
+    #returns vals from QTable ( can be dict, can be NN )
+    def calculateQValues(self, state): #transformed_state
+        tstate = self.transform_state(state)
+        input_state = self.createInput(tstate)
+        tempQ = [0] * self.ACTION_TYPES
+        for i in range(self.ACTION_TYPES):
+            input_state[0] = (i+1.0)/3.0 #normalising the action part
+            tempQ[i] = self.getQVal(input_state)
+        return tempQ
+
+    def findMaxValues(self, QValues):
+        maxQ = QValues[0]
+        selectedAction = self.ACTIONS[0]
+
+        for i in range (self.ACTION_TYPES):
+            if QValues[i] > maxQ:
+                maxQ = QValues[i]
+                selectedAction = i-1
+            elif QValues[i] == maxQ:
+                rnd1 = random.randint(0,1000)
+                rnd2 = random.randint(0,1000)
+                if rnd2 > rnd1:
+                    maxQ = QValues[i]
+                    selectedAction = i-1
+        
+        return selectedAction
+
+
+    def e_greedySelection(self, QValues):
+        action = self.ACTION_NOTHING
+        rand = random.uniform(0, 1)
+
+        if (rand >= self.network.epsilon):
+            action = self.findMaxValues(QValues)
+        else:
+            action = self.randomAction()
+        
+        return action
+
+
+    def QLearning (self, lastState, lastAction, newState, bestAction, reward):
+        lastStateInput = self.createInput(self.transform_state(lastState), lastAction)
+        newStateInput = self.createInput(self.transform_state(newState), bestAction)
+
+        QValue = self.network.run(lastStateInput)
+
+        previousQ = QValue
+        newQ = self.network.run(newStateInput)
+
+        QValue += self.network.alpha * (reward + self.network.gamma * newQ - previousQ)
+        return QValue
+
+    def initParams(self):
+        pass
+
+    def agent_start (self, state):
+        self.network.currentEpoch += 1
+        self.initParams()
+
+        QValues = self.calculateQValues(state)
+        action = self.e_greedySelection(QValues)
+
+        self.lastAction = action
+        self.lastState = state
+
+        return action
+
+
+    #returns action
+    def agent_step (self, state):
+
+        tempTState = self.transform_state(state)
+        if tempTState[self.POSITION] == None:
+            return self.ACTION_NOTHING
+
+        
+        if self.lastState is None:
+            return self.agent_start(state)
+                
+        #state = self.transform_state(state)
+
+        #get reward on state
+        reward = self.calculateReward(state) #original state reqd
+
+        transformed_state = self.transform_state(state) #needed here ?
+        input_state = self.createInput(transformed_state) #needed here ?
+
+        #Calculate Qvalues
+        QValues = self.calculateQValues(state) #transformed->input state reqd
+
+        #Select action
+        action = self.e_greedySelection(QValues)
+
+        QValue = 0
+        #tranformed->input state reqd
+        QValue = self.QLearning (self.lastState, self.lastAction, state, self.findMaxValues(QValues), reward)
+        #QValue = Qlearning(lastState, new Monopoly.RLClasses.Action(lastAction), observation, new Monopoly.RLClasses.Action(findMaxValues(QValues)), reward);
+
+        #trainNeural(createInput(lastState, lastAction), QValue);
+        transformed_lastState = self.transform_state(self.lastState)
+        input_lastState = self.createInput(transformed_lastState, self.lastAction)
+        self.network.train(input_lastState, QValue)
+
+        self.lastAction = action
+        self.lastState = state
+
+        return action
+####
 
     def parsePhase(self, state):
+        '''
         phaseNumber = state["phase"]
         phasePayload = state["phase_payload"]
 
@@ -76,6 +271,7 @@ class Agent:
 
             # retrieve the property
             handleBMSTDecison(state)
+        '''
 
     def jailDecision(self, state):
         current_player = state[self.PLAYER_TURN_INDEX] % 2
@@ -179,12 +375,6 @@ class Agent:
         else:
             return -1
 
-    def agent_step(self, state):
-        # reward = calculate_reward(state)
-        # -1 sell, 0 Do nothing, 1 buy
-        arr = [-1, 0, 1]
-        return arr[random.randint(0, 2)]
-
     def checkSimilarity(self, firstState, secondState, playerId):
         SIMILARITY_THRESHOLD = 0.1
         obs1 = self.transform_state(firstState, playerId)
@@ -217,7 +407,11 @@ class Agent:
 
         return True
 
-    def transform_state(self, state, playerId):
+    def transform_state(self, state, playerId = None):
+
+        if playerId is None:
+            playerId = state[self.PLAYER_TURN_INDEX] % 2
+
         firstPropertyPercentage, secondPropertyPercentage = self.calculatePropertyGroupPercentage(state)
         moneyRatio, propertyRatio = self.calculateFinancePercentage(state, playerId)
         position = self.getNormalizedPosition(state, playerId)
@@ -229,7 +423,7 @@ class Agent:
         dict["moneyRatio"] = moneyRatio
         dict["propertyRatio"] = propertyRatio
         dict["position"] = position
-        print(dict)
+        #print(dict)
         return dict
 
     def getNormalizedPosition(self, state, playerId):
