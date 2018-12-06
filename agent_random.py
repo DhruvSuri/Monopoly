@@ -15,8 +15,8 @@ from network import Network
 # 2 Finance
 
 
-class Agent:
-    def __init__(self, id, trained_network = None):
+class RandomAgent:
+    def __init__(self, id):
         self.id = id
         self.PLAYER_TURN_INDEX = 0
         self.PROPERTY_STATUS_INDEX = 1
@@ -39,12 +39,10 @@ class Agent:
         self.lastAction = None
         self.INPUT_NODES = 24
         self.network = Network()
-        if trained_network != None:
-            self.network = trained_network
         self.constructionException = ["Railroad", "Utility"]
 
     def getBSMTDecision(self, state):
-        action = self.agent_step(state)
+        action = self.randomAction()
         # action = 1
         if action == 1:
             constructions = self.getMaxConstructions(state)
@@ -63,7 +61,8 @@ class Agent:
         pass
 
     def buyProperty(self, state):
-        action = self.agent_step(state)
+        action = self.randomAction()
+        # action = self.agent_step(state)
         if action == 1:
             return True
         else:
@@ -118,7 +117,7 @@ class Agent:
         reward = self.smooth(reward, alivePlayers * 5)  # aliveplayers * 5
         reward = reward + (1 / alivePlayers) * assetFactor
 
-        print ('player: ' + str(currentPlayerId) + ', reward: ' + str(reward))
+        # print ('player: ' + str(currentPlayerId) + ', reward: ' + str(reward))
         return reward
 
     def getQVal(self, input_state):
