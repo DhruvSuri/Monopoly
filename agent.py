@@ -28,7 +28,12 @@ class Agent:
         # action = self.agent_step(state)
         action = 1
         if action == 1:
-            return ["B", self.getMaxConstructions(state)]
+            constructions = self.getMaxConstructions(state)
+            if constructions != None:
+                return ["B", constructions]
+            else:
+                return None
+
         elif action == -1:
             print()
             # self.getSellOrder(state)
@@ -197,13 +202,17 @@ class Agent:
             return False
 
         # check Diff in Group
-        obs1Group = dict["firstPropPerc"]
-        obs2Group = dict["secPropPerc"]
+        obs1Group1 = obs1["firstPropPerc"]
+        obs1Group2 = obs1["secPropPerc"]
+        obs2Group1 = obs2["firstPropPerc"]
+        obs2Group2 = obs2["secPropPerc"]
 
-        diff = 0
-        for i in range[0, len(obs1Group)]:
-            diff += abs(obs1Group[i] - obs2Group[i])
-            if diff > SIMILARITY_THRESHOLD:
+        diff1 = 0
+        diff2 = 0
+        for i in range(0, len(obs1Group1)):
+            diff1 += abs(obs1Group1[i] - obs2Group1[i])
+            diff2 += abs(obs1Group2[i] - obs2Group2[i])
+            if diff1 > SIMILARITY_THRESHOLD or diff2 > SIMILARITY_THRESHOLD:
                 return False
 
         return True
