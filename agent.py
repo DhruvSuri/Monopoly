@@ -1,6 +1,5 @@
 import constants
 import random
-import collections
 from network import Network
 
 
@@ -521,8 +520,7 @@ class Agent:
         propertyGroupToUnifMapping = {}
         start = 0.1
 
-        orderedPropertyGroups = collections.OrderedDict(sorted(properyGroup.items()))
-        for monopolyName, monopolyProperties in orderedPropertyGroups.items():
+        for monopolyName, monopolyProperties in properyGroup.items():
             for propertyid in monopolyProperties:
                 propertyGroupToUnifMapping[propertyid] = round(start, 2)
             start += 0.1
@@ -562,9 +560,8 @@ class Agent:
         propertyZeroPercentage = []
         propertyOnePercentage = []
 
-        orderedPropertyGroups = collections.OrderedDict(sorted(propertyGroups.items()))  # TODO : how to sort
         i = 0
-        for monopolyName, monopolyProperties in orderedPropertyGroups.items():
+        for monopolyName, monopolyProperties in propertyGroups.items():
             ownZero = 0
             ownOne = 0
             for propertyId in monopolyProperties:
