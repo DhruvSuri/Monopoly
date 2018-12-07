@@ -599,4 +599,11 @@ class Agent:
 
         for key, value in propertyGroup.items():
             propertyGroup[key] = list(value)
-        return propertyGroup
+
+        tupleList = []
+        for key in self.constructionException:
+            tupleList.append((key, propertyGroup[key]))
+            propertyGroup.pop(key)
+        sortedPropertyTyples = sorted(propertyGroup.items(), key=lambda x: sum(x[1]) / len(x[1]))
+        tupleList.extend(sortedPropertyTyples)
+        return dict(tupleList)
