@@ -54,7 +54,7 @@ class Network:
 
     def getTensor (self, input_state):
         input_ar = np.asarray(input_state)
-        input_tensor = torch.from_numpy(input_ar).float()
+        input_tensor = Variable (torch.from_numpy(input_ar).float(), requires_grad=True)
         return input_tensor
     
     def run(self, input_state):
