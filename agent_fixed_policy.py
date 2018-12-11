@@ -6,8 +6,8 @@ import constants
 Tunable Parameters
 '''
 TURNS_JAIL_HEURISTICS = 30
-BUYING_PROPERTY_PROBABILITY = 0.8
-BUILD_HOTEL_PROBABILITY = 0.8
+BUYING_PROPERTY_PROBABILITY = 0.9
+BUILD_HOUSE_PROBABILITY = 0.9
 AUCTION_BID_MIN = 0.4
 AUCTION_BID_MAX = 0.7
 
@@ -57,7 +57,10 @@ class Agent:
                 return action
             # Enough cash to handle debt. Do Nothing
         
-        return self.getMaxConstructions(state)
+        if np.random.uniform(0, 1) <= BUILD_HOUSE_PROBABILITY:
+            return self.getMaxConstructions(state)
+        
+        return None
         
     def respondTrade(self, state):
         return None
@@ -208,7 +211,11 @@ class Agent:
         if min < max:
             for propertyId, status in statusDict.items():
                 if status == min and playerCashHolding > self.getConstructionPrice(propertyId):
-                    propertiesConstructionOrder[propertyId] += 1
+                    if propertiesConstructionOrder.get(propertyId, None) == None:
+                        propertiesConstructionOrder[propertyId] = 1
+                    else:
+                        propertiesConstructionOrder[propertyId] += 1
+                    
                     statusDict[propertyId] += 1
                     playerCashHolding -= self.getConstructionPrice(propertyId)
                 else:
