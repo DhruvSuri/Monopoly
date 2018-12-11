@@ -50,6 +50,8 @@ class Agent:
                 # Try selling first
                 action = self.sell(state)
 
+                
+
                 # If nothing to sell then mortgage
                 if action == None :
                     action = self.mortgage(state)
@@ -58,7 +60,11 @@ class Agent:
             # Enough cash to handle debt. Do Nothing
         
         if np.random.uniform(0, 1) <= BUILD_HOUSE_PROBABILITY:
-            return self.getMaxConstructions(state)
+            constructions = self.getMaxConstructions(state)
+            if constructions != None:
+                #print (state[1])
+                #print ('constructions2: ' + str(constructions))
+                return ("B", constructions)
         
         return None
         
@@ -100,9 +106,6 @@ class Agent:
 
     def receiveState(self, state):
         self.stateHist.append(state)
-
-    def getTurns(self):
-        return len(self.stateHist)
 
     def hasJailCard(self, state):
         return self.isPropertyOwned(state[PROPERTY_STATUS_INDEX][CHANCE_GET_OUT_OF_JAIL_FREE]) \
@@ -177,12 +180,11 @@ class Agent:
         return (self.id == 1 and propertyStatus > 0) or (self.id == 2 and propertyStatus < 0)
 
 
-
     # RL Agent Copied Code
 
     def getMaxConstructions(self, state):
         monopolyGroups = self.getPropertyGroups()
-        currentPlayer = state[PLAYER_TURN_INDEX] % 2
+        currentPlayer = self.id - 1
         playerCash = state[PLAYER_CASH_INDEX][currentPlayer]
         propertyStatus = state[PROPERTY_STATUS_INDEX]
         propertiesConstructionOrder = {}
