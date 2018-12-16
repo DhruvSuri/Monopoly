@@ -80,6 +80,6 @@ network.py
 
 
 ## Authors
-* [Dhruv](https://github.com/DhruvSuri)
+* Dhruv
 * [Nikhil](https://github.com/nikhilsid)
 * [Udbhav](https://github.com/udbhav-sharma)
