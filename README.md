@@ -80,6 +80,10 @@ network.py
 
 
 ## Authors
-* Dhruv
+* [Dhruv](https://github.com/DhruvSuri)
 * [Nikhil](https://github.com/nikhilsid)
 * [Udbhav](https://github.com/udbhav-sharma)
+
+## Acknowledgments
+* Referred Team-007 code for ChanceCards and CommunityChestCards config
+
