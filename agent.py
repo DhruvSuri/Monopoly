@@ -4,6 +4,7 @@ import collections
 from network import Network
 import numpy as np
 
+import pickle
 
 # Actions:
 # Spend(Buy, Auction, Trade)
@@ -66,8 +67,13 @@ class Agent:
         self.lastAction = None
         self.INPUT_NODES = 24
         self.network = Network()
+        
         if trained_network != None:
             self.network = trained_network
+        else:
+            file = open("network_without_fix_2.txt", 'rb')
+            trained_network = pickle.load(file)
+
         self.constructionException = ["Railroad", "Utility"]
         self.traces = []
         self.STATE_IDX = 'state'
@@ -75,6 +81,7 @@ class Agent:
         self.VALUE_IDX = 'value'
         
         self.jailDiceRolls = 0
+
 
     def getBSMTDecision(self, state):
         # Check for Debt field and clear
@@ -403,14 +410,11 @@ class Agent:
                 
                 qVal = qT + self.network.alpha * (self.traces[i][self.VALUE_IDX]) * (reward + self.network.gamma * maxQt - maxQ)
 
-                #trainNeural(createInput(traces[i].observation, traces[i].action.action), qVal);
                 self.network.train(self.createInput( self.transform_state(self.traces[i][self.STATE_IDX]), self.traces[i][self.ACTION_IDX] ), qVal)
 
             else:
-                #traces[i].value = gamma * lamda * traces[i].value;
                 self.traces[i][self.VALUE_IDX] *= self.network.gamma * self.network.lamda
 
-                #qT = network.Run(createInput(traces[i].observation, traces[i].action.action))[0];
                 qT = self.network.run( self.createInput(self.transform_state(self.traces[i][self.STATE_IDX]), self.traces[i][self.ACTION_IDX]) )
                 
                 act = self.findMaxValues(self.calculateQValues(state))
@@ -445,7 +449,6 @@ class Agent:
         if self.lastState is None:
             return self.agent_start(state)
                 
-        #state = self.transform_state(state)
 
         #get reward on state
         reward = self.calculateReward(state) #original state reqd
@@ -462,25 +465,21 @@ class Agent:
         QValue = 0
         exists = False
 
-        #exists = updateQTraces(observation, new Monopoly.RLClasses.Action(action), reward);
-        ####temp####exists = self.updateQTraces (state, action, reward)
+        exists = self.updateQTraces (state, action, reward)
 
         #tranformed->input state reqd
         QValue = self.QLearning (self.lastState, self.lastAction, state, self.findMaxValues(QValues), reward)
-        #QValue = Qlearning(lastState, new Monopoly.RLClasses.Action(lastAction), observation, new Monopoly.RLClasses.Action(findMaxValues(QValues)), reward);
 
-        #trainNeural(createInput(lastState, lastAction), QValue);
         transformed_lastState = self.transform_state(self.lastState)
         input_lastState = self.createInput(transformed_lastState, self.lastAction)
         self.network.train(input_lastState, QValue)
 
-        '''
-        ####temp####
+
         if exists == False:
             self.traces.append ( {self.STATE_IDX : self.lastState,
                               self.ACTION_IDX : self.lastAction, 
                               self.VALUE_IDX : 1} )
-        '''
+        
         self.lastAction = action
         self.lastState = state
 
